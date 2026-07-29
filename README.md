@@ -1,6 +1,6 @@
 # Teach-Terminal
 
->Cybersecurit learning game in the browser. Simulates real **LINUX terminal**.
+>Cybersecurity learning game in the browser. Simulates real **LINUX terminal**.
 
 ## Already Made
 - **index.html** - *Start menu with Start and Settings buttons*

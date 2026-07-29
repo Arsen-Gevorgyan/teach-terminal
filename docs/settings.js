@@ -9,13 +9,16 @@ buttons.forEach((button, index) => {
         });
         cards[index].classList.add('selected');
         localStorage.setItem('selectedTheme', themeNames[index]);
+
+        location.reload();
+
     });
 });
 
 window.addEventListener('DOMContentLoaded', () => {
     const saved = localStorage.getItem('selectedTheme');
     themeNames.forEach((themeName, index) => {
-        if (themeName === saved){
+        if (themeName === saved) {
             cards[index].classList.add('selected');
         }
     })
