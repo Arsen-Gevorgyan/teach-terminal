@@ -3,7 +3,7 @@
 >Cybersecurit learning game in the browser. Simulates real **LINUX terminal**.
 
 ## Already Made
-- **index.html** - *Start menu with Start and Settings buttons
+- **index.html** - *Start menu with Start and Settings buttons*
 - **main.html** - *Initial form*
 - **settigs.html** - *Theme selection page (Ubuntu, Hacker, Kali)*
 - **style.css** - *Styles for index.html and settings.html, gradient animations, glassmorphism cards, CSS variables for themes.*
