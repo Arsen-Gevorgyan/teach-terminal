@@ -1,16 +1,25 @@
+:root {
+    --bg-color: #300a24;
+    --text-color: #ffffff;
+    --accent-color: #00ff88;
+    --card-bg: rgba(30, 5, 22, 0.9);
+    --button-bg: #4a1a3a;
+    --border-color: #5c204a;
+}
+
 * {
     margin: 0;
     padding: 0;
 }
 
 body {
-    overflow: clip;
+    overflow: hidden;
     text-align: center;
-    background-color: #300a24;
+    background-color: var(--bg-color);
     display: grid;
     place-items: center;
     font-family: monospace;
-
+    height: 100vh;
 }
 
 h1 {
@@ -44,43 +53,24 @@ button {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    background: #4a1a3a;
-    color: #ffffff;
-
-    box-shadow:
-        0 1px 0 #6b2a5a,
-        0 2px 0 #4d1a3a,
-        0 3px 0 #4d1a3a,
-        0 4px 0 #3e1430,
-        0 6px 12px rgba(0, 0, 0, 0.4);
-
+    background: var(--button-bg);
+    color: var(--text-color);
     transform: translateY(0);
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 button:hover {
     transform: translateY(-3px);
-    box-shadow:
-        0 1px 0 #6b2a5a,
-        0 2px 0 #5c204a,
-        0 3px 0 #4d1a3a,
-        0 4px 0 #3e1430,
-        0 5px 0 #2f1025,
-        0 6px 0 #200a18,
-        0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
 button:active {
     transform: translateY(2px);
-    box-shadow:
-        0 1px 0 #6b2a5a,
-        0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .btn-settings,
 .btn-start {
     background: transparent;
-    border: 1px solid #6b2a5a;
+    border: 1px solid var(--border-color);
     box-shadow: none;
     font-size: 1rem;
     padding: 12px 32px;
@@ -90,8 +80,7 @@ button:active {
 
 .btn-settings:hover,
 .btn-start:hover {
-    background: #4a1a3a;
-    box-shadow: 0 0 10px rgba(107, 42, 90, 0.5);
+    background: var(--bg-color);
 }
 
 .terminal-window {
@@ -99,17 +88,114 @@ button:active {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(30, 5, 22, 0.9);
-    border: 1px solid #5c204a;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 60px 80px;
-    box-shadow:
-        0 0 40px rgba(0, 0, 0, 0.6),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    padding: 20px 50px;
 }
 
 hr {
     height: 10px;
     border: none;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.card-container {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.ubuntu-bg {
+    background: linear-gradient(135deg, #300a24, #4a1a3a);
+}
+
+.hacker-bg {
+    background: linear-gradient(135deg, #0a0a0a, #00ff00);
+}
+
+.kali-bg {
+    background: linear-gradient(135deg, #0a0a2e, #1a1a4e);
+}
+
+.theme-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    width: 250px;
+    padding: 16px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.theme-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.theme-card.selected::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, #00ff88, #00b3ff, #b700ff, #00ff88);
+    background-size: 300% 300%;
+    border-radius: 18px;
+    z-index: -1;
+    animation: borderGlow 3s ease infinite;
+    animation-delay: 0.3s;
+}
+
+@keyframes borderGlow {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.theme-preview {
+    height: 180px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-name {
+    color: var(--text-color);
+    font-size: 1.8rem;
+    font-weight: bold;
+    letter-spacing: 3px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.theme-card.selected {
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 20px var(--accent-color);
+}
+
+.theme-card.selected .btn-select {
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: default;
+    box-shadow: none;
+    transform: none;
+    pointer-events: none;
+}
+
+.theme-card.selected .btn-select:hover {
+    transform: none;
+    box-shadow: none;
 }
