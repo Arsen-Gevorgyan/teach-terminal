@@ -3,9 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Teach Terminal Game</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    
+<body class="terminal-page">
+    <div id="terminal">
+        <div id="output-area">
+            <div id="input-line">
+                <span class="prompt"></span>
+                <span class="input-text"></span><span class="cursor">█</span>
+            </div>
+        </div>
+        <input type="text" id="hidden-input" autofocus>
+    </div>
+
+    <script src="command.js"></script>
+    <script src="terminal.js"></script>
+    <script src="theme.js"></script>
 </body>
 </html>
