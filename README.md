@@ -11,7 +11,6 @@
 - **theme.js** - *Reads saved theme from localStorage and change CSS variable values*
 
 ## Upcoming
-- Responsive fixes for mobile devices
 - main.html - lecture system and practice missions
 
 ## Try it - [Demo](https://arsen-gevorgyan.github.io/teach-terminal/)

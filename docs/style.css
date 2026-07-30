@@ -13,7 +13,7 @@
 }
 
 body {
-    overflow: hidden;
+    overflow: clip;
     text-align: center;
     background-color: var(--bg-color);
     display: grid;
@@ -23,7 +23,7 @@ body {
 }
 
 h1 {
-    font-size: 3rem;
+    font-size: clamp(1.5rem, 5vw, 3rem);
     background: linear-gradient(65deg, #00b3ff, #00ff4c, #b700ff, #00b3ff);
     background-size: 300% 100%;
     -webkit-background-clip: text;
@@ -84,14 +84,15 @@ button:active {
 }
 
 .terminal-window {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 20px 50px;
+    padding: 20px 30px;
+    max-width: 95vw;
+    width: auto;
+    margin: auto;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 hr {
@@ -124,8 +125,8 @@ hr {
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
-    width: 250px;
-    padding: 16px;
+    width: 220px;
+    padding: 12px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
 }
@@ -165,7 +166,7 @@ hr {
 }
 
 .theme-preview {
-    height: 180px;
+    height: 140px;
     border-radius: 12px;
     margin-bottom: 16px;
     display: flex;
@@ -175,7 +176,7 @@ hr {
 
 .theme-name {
     color: var(--text-color);
-    font-size: 1.8rem;
+    font-size: 1.4rem;
     font-weight: bold;
     letter-spacing: 3px;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
@@ -198,4 +199,47 @@ hr {
 .theme-card.selected .btn-select:hover {
     transform: none;
     box-shadow: none;
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 0 20px 0 20px;
+        margin: 0 20px 0 20px;
+    }
+    
+    .card-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .theme-card {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        width: 85vw;
+        max-width: 320px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .theme-preview {
+        height: 120px;
+    }
+
+    .terminal-window {
+        padding: 20px 16px;
+        margin: 20px;      
+    }
+
+    button {
+        font-size: 1rem;
+        padding: 12px 32px;
+    }
+
+    .btn-settings,
+    .btn-start {
+        font-size: 0.9rem;
+        padding: 10px 24px;
+    }
 }
