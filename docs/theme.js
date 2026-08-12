@@ -1,7 +1,7 @@
 (function () {
     const theme = localStorage.getItem('selectedTheme') || 'ubuntu';
     const root = document.documentElement;
-    
+
     const themes = {
         ubuntu: {
             '--bg-color': '#300a24',
@@ -28,7 +28,7 @@
             '--card-bg': 'rgba(5, 5, 30, 0.9)',
             '--button-bg': '#1a1a4e',
             '--border-color': '#4a6c8f',
-            '--login-bg': 'radial-gradient(circle, rgba(20, 161, 255, 1) 0%, rgba(0, 108, 138, 1) 100%)'
+            '--login-bg': 'radial-gradient(circle, rgba(20, 161, 255, 1) 0%, rgb(0, 52, 66) 100%)'
         }
     };
 
