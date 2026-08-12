@@ -5,6 +5,7 @@
     --card-bg: rgba(30, 5, 22, 0.9);
     --button-bg: #4a1a3a;
     --border-color: #5c204a;
+    --login-bg: url(ubuntu_theme.png);
 }
 
 * {

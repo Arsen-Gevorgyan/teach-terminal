@@ -1,93 +1,53 @@
-const inputs = ['username', 'machinename', 'password'];
-let currentInput = 0;
-let loginUsername = '';
-let loginMachinename = '';
-let loginPassword = '';
-let complete = false;
+document.getElementById('login-form').addEventListener('submit', function(event) {
+    event.preventDefault();
 
-let originalProcessCommand;
+    const username = document.getElementById('username').value.trim();
+    const machinename = document.getElementById('machinename').value.trim();
+    const password = document.getElementById('password').value;
+    const errorAll = document.getElementById('error-all');
 
-window.addEventListener('DOMContentLoaded', () => {
-    originalProcessCommand = processCommand;
-    processCommand = function(command) {
-        if (complete) {
-            return originalProcessCommand(command);
-        }
-        return handleLogin(command);
-    };
-    startLogin();
+    const usernameError = validateName(username);
+    if (usernameError) {
+        errorAll.textContent = usernameError;
+        return;
+    }
+
+    const machineError = validateMachine(machinename);
+    if (machineError) {
+        errorAll.textContent = machineError;
+        return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+        errorAll.textContent = passwordError;
+        return;
+    }
+
+    errorAll.textContent = '';
+    localStorage.setItem('loginUser', username.toLowerCase());
+    localStorage.setItem('loginMachine', machinename.toLowerCase());
+    window.location.href = 'main.html';
 });
 
-function handleLogin(input) {
-    const inputed = inputs[currentInput];
-
-    if (inputed === 'username') {
-        const error = validateName(input);
-        if (error) return error;
-        loginUsername = input.toLowerCase();
-        currentInput++;
-        return 'Enter machine name:';
-    }
-    if (inputed === 'machinename') {
-        const error = validateName(input);
-        if (error) return error;
-        loginMachinename = input.toLowerCase();
-        currentInput++;
-        setPasswordMode(true);
-        return 'Enter password:';
-    }
-    if (inputed === 'password') {
-        const error = validatePassword(input);
-        if (error) return error;
-        loginPassword = input;
-        currentInput++;
-        complete = true;
-        setPasswordMode(false);
-        updatePrompt(loginUsername, loginMachinename);
-
-        let dots = 0;
-        const loadingDiv = document.createElement('div');
-        loadingDiv.textContent = 'Loading';
-        outputArea.insertBefore(loadingDiv, inputLine);
-
-        const loadingInterval = setInterval(() => {
-            dots = (dots + 1) % 4;
-            loadingDiv.textContent = 'Loading' + '.'.repeat(dots);
-        }, 500);
-
-        setTimeout(() => {
-            clearInterval(loadingInterval);
-            clearOutput();
-            showLecture([
-                'Welcome to Lesson 1',
-                'pwd - print working directory',
-                'Shows current directory',
-                '',
-                'Now type: pwd'
-            ]);
-        }, 3000);
-
-        return 'Login successful!';
-    }
-    return '';
+function validateName(input) {
+    if (input.length < 4) return 'Username must be at least 4 characters';
+    if (input.length > 9) return 'Username must be less than 10 characters';
+    if (!/^[a-zA-Z]/.test(input)) return 'Username must start with a letter';
+    if (!/^[a-zA-Z0-9]+$/.test(input)) return 'Username only letters and numbers allowed';
+    return null;
 }
 
-function validateName(input) {
-    if (input.length < 4) return 'Must be at least 5 characters';
-    if (input.length > 10) return 'Must be less than 10 characters';
-    if (!/^[a-zA-Z]/.test(input)) return 'Must start with a letter';
-    if (!/^[a-zA-Z0-9]+$/.test(input)) return 'Can only contain letters and numbers';
+function validateMachine(input) {
+    if (input.length < 4) return 'Machinename must be at least 4 characters';
+    if (input.length > 9) return 'Machinename must be less than 10 characters';
+    if (!/^[a-zA-Z]/.test(input)) return 'Machinename must start with a letter';
+    if (!/^[a-zA-Z0-9]+$/.test(input)) return 'Machinename only letters and numbers allowed';
     return null;
 }
 
 function validatePassword(input) {
-    if (input.length < 7) return 'Must be at least 8 characters';
-    if (input.length > 20) return 'Password must be less than 20 characters';
+    if (input.length < 8) return 'Password must be at least 8 characters';
+    if (input.length > 19) return 'Password must be less than 20 characters';
     return null;
-}
-
-function startLogin() {
-    const div = document.createElement('div');
-    div.textContent = 'Enter username:';
-    outputArea.insertBefore(div, inputLine);
 }

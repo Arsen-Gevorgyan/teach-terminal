@@ -1,0 +1,95 @@
+body.theme-ubuntu {
+    background-image: url(ubuntu_theme.png);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+body.theme-hacker {
+    background: #073307;
+    background: radial-gradient(circle, rgba(7, 51, 7, 1) 0%, rgba(0, 0, 0, 1) 100%);
+}
+
+body.theme-kali {
+    background: #14a1ff;
+    background: radial-gradient(circle, rgba(20, 161, 255, 1) 0%, rgba(0, 108, 138, 1) 100%);
+}
+
+body {
+    background: var(--login-bg);
+    background-size: cover;
+    background-position: center;
+}
+
+.login-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    padding: 40px;
+    width: 350px;
+    max-width: 90vw;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    color: #aaaaaa;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    font-family: monospace;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #555555;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-family: monospace;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.error {
+    color: #ff4444;
+    font-size: 0.8rem;
+    font-family: monospace;
+    display: block;
+    margin-top: 4px;
+    min-height: 1em;
+}
+
+#login-form button {
+    border-radius: 0;
+    width: 100%;
+    padding: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-color);
+    font-family: monospace;
+    border: 1px solid #555555;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+#login-form button:hover {
+    background: var(--bg-color);
+    opacity: 0.9;
+}
