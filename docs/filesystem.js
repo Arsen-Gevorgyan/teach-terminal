@@ -149,13 +149,13 @@ class FileSystem {
         const userFolder = new file(true, 7, 5, 5, '/home/' + username, username, username);
         home.addChild(userFolder);
 
-        const documents = new file(true, 7, 5, 5, '/home/' + username + '/documents', username, username);
+        const documents = new file(true, 7, 5, 5, '/home/' + username + '/Documents', username, username);
         userFolder.addChild(documents);
 
-        const downloads = new file(true, 7, 5, 5, '/home/' + username + '/downloads', username, username);
+        const downloads = new file(true, 7, 5, 5, '/home/' + username + '/Downloads', username, username);
         userFolder.addChild(downloads);
 
-        const desktop = new file(true, 7, 5, 5, '/home/' + username + '/desktop', username, username);
+        const desktop = new file(true, 7, 5, 5, '/home/' + username + '/Desktop', username, username);
         userFolder.addChild(desktop);
 
         this.#cwd = userFolder;
@@ -170,14 +170,29 @@ class FileSystem {
 
     ls() {
         const children = this.#cwd.getChildren();
-        const names = children.map(child => child.fileName);
-        return names.join('  ');
+        return children.map(child => {
+            if (child.isDirectory) {
+                return '<span class="dir-color">' + child.fileName + '</span>';
+            }
+            if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
+                return '<span class="exec-color">' + child.fileName + '</span>';
+            }
+            return '<span class="file-color">' + child.fileName + '</span>';
+        }).join('  ');
     }
 
     lsDetail() {
         const children = this.#cwd.getChildren();
         return children.map(child => {
-            return child.getPermissionString() + ' ' + child.ownerName + ' ' + child.groupName + ' ' + child.fileName;
+            let nameSpan;
+            if (child.isDirectory) {
+                nameSpan = '<span class="dir-color">' + child.fileName + '</span>';
+            } else if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
+                nameSpan = '<span class="exec-color">' + child.fileName + '</span>';
+            } else {
+                nameSpan = '<span class="file-color">' + child.fileName + '</span>';
+            }
+            return child.getPermissionString() + ' ' + child.ownerName + ' ' + child.groupName + ' ' + nameSpan;
         }).join('\n');
     }
 
@@ -243,6 +258,10 @@ class FileSystem {
         return this.#root;
     }
 
+    resolve(path) {
+        return this.#resolvePath(path);
+    }
+
     mkdir(name) {
         if (this.#cwd.getChild(name)) {
             return `mkdir: cannot create directory '${name}': File exists`;
@@ -261,19 +280,3 @@ class FileSystem {
         return null;
     }
 }
-
-const fs = new FileSystem('student', 'linux');
-console.log(fs.pwd());
-console.log(fs.ls());
-console.log(fs.cd('documents'));
-console.log(fs.pwd());
-console.log(fs.cd('..'));
-console.log(fs.pwd());
-console.log(fs.cd('/home'));
-console.log(fs.pwd());
-console.log(fs.cd('~'));
-console.log(fs.pwd());
-fs.mkdir('test');
-console.log(fs.ls());
-fs.touch('file.txt');
-console.log(fs.ls());

@@ -5,34 +5,28 @@ const outputArea = document.getElementById('output-area');
 const inputLine = document.getElementById('input-line');
 const promptSpan = document.querySelector('.prompt');
 
-var username = '';
-var machinename = '';
-var promptText = '';
+var loginUser = localStorage.getItem('loginUser') || 'student';
+var loginMachine = localStorage.getItem('loginMachine') || 'linux';
 
-promptSpan.textContent = promptText;
+function updatePrompt() {
+    const cwdPath = fs.pwd();
+    const homePath = '/home/' + loginUser;
 
-let passwordMode = false;
+    let displayPath;
+    if (cwdPath === homePath) {
+        displayPath = '~';
+    } else if (cwdPath.startsWith(homePath + '/')) {
+        displayPath = '~' + cwdPath.slice(homePath.length);
+    } else {
+        displayPath = cwdPath;
+    }
 
-function setPasswordMode(mode) {
-    passwordMode = mode;
+    promptSpan.textContent = loginUser + '@' + loginMachine + ':' + displayPath + '$ ';
 }
 
-function updatePrompt(user, machine) {
-    username = user;
-    machinename = machine;
-    promptText = username + '@' + machinename + ":~$ ";
-    promptSpan.textContent = promptText;
-}
-
-// window.addEventListener('DOMContentLoaded', () => {
-//     showLecture([
-//         'Welcome to Lesson 1',
-//         'pwd - print working directory',
-//         'Show current directory',
-//         '',
-//         'Now type: pwd'
-//     ]);
-// });
+window.addEventListener('DOMContentLoaded', () => {
+    updatePrompt();
+});
 
 terminal.addEventListener('click', () => {
     hiddenInput.focus();
@@ -42,30 +36,26 @@ hiddenInput.focus();
 
 hiddenInput.addEventListener('input', () => {
     let text = hiddenInput.value;
-
     if (text.length > 100) {
         text = text.slice(0, 100);
         hiddenInput.value = text;
     }
 
-    if (passwordMode) {
-        inputText.textContent = '*'.repeat(text.length);
-        inputText.className = 'input-text';
-    } else {
-        inputText.textContent = text;
-        const typedCommand = text.trim().split(/\s+/)[0];
-        if (isValidCommand(typedCommand)) {
-            inputText.className = 'input-text valid-command';
-        } else {
-            inputText.className = 'input-text';
+    const parts = text.split(/\s+/);
+    if (parts.length > 0 && parts[0]) {
+        if (isValidCommand(parts[0])) {
+            const coloredCommand = '<span class="valid-command">' + parts[0] + '</span>';
+            const rest = text.slice(parts[0].length);
+            inputText.innerHTML = coloredCommand + rest;
+        }
+        else {
+            inputText.textContent = text;
         }
     }
+    else {
+        inputText.textContent = '';
+    }
 });
-
-function isValidCommand(word) {
-    const validCommands = ['pwd','clear','help'];
-    return validCommands.includes(word.toLowerCase());
-}
 
 hiddenInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
@@ -73,30 +63,24 @@ hiddenInput.addEventListener('keydown', (event) => {
         const command = hiddenInput.value.trim();
         const fullCommand = hiddenInput.value;
 
-        console.log('Enter pressed, command:', command);
-
         const commandLine = document.createElement('div');
-        commandLine.textContent = promptText + fullCommand;
-
+        commandLine.innerHTML = '<span class="prompt">' + promptSpan.textContent + '</span><span class="command-text">' + fullCommand + '</span>';
         outputArea.insertBefore(commandLine, inputLine);
 
         if (command) {
-            commandLine.classList.add('command-line');
             const result = processCommand(command);
-            if (result) {
+            if (result !== null && result !== undefined) {
                 const outputLine = document.createElement('div');
                 outputLine.innerHTML = result.replace(/\n/g, '<br>');
                 outputArea.insertBefore(outputLine, inputLine);
             }
+            updatePrompt();
         }
 
         hiddenInput.value = '';
         inputText.textContent = '';
-        console.log('After clear, inputText:', inputText.textContent);
         trimLines();
-
-
-        inputLine.scrollIntoView({ block: 'nearest' });
+        setTimeout(scrollToBottom, 10);
     }
 });
 
@@ -107,7 +91,6 @@ function trimLines() {
     const paddingBottom = parseFloat(style.paddingBottom);
     const availableHeight = outputArea.clientHeight - paddingTop - paddingBottom;
     const maxLines = Math.floor(availableHeight / lineHeight);
-
     const divs = outputArea.querySelectorAll('div');
 
     while (divs.length >= maxLines) {
@@ -115,10 +98,11 @@ function trimLines() {
     }
 }
 
-function showLecture(lines) {
-    lines.forEach(line => {
-        const div = document.createElement('div');
-        div.textContent = line;
-        outputArea.insertBefore(div, inputLine);
-    });
+function scrollToBottom() {
+    outputArea.scrollTop = outputArea.scrollHeight;
+}
+
+function isValidCommand(word) {
+    const validCommands = ['pwd', 'ls', 'cd', 'mkdir', 'touch', 'clear', 'help'];
+    return validCommands.includes(word.toLowerCase());
 }

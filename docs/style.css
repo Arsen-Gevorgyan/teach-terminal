@@ -6,6 +6,10 @@
     --button-bg: #4a1a3a;
     --border-color: #5c204a;
     --login-bg: url(ubuntu_theme.png);
+    --command-text: #ffaa00;
+    --dir-color: #4a9eff;
+    --file-color: #ffffff;
+    --exec-color: #00ff88;
 }
 
 * {
@@ -14,7 +18,7 @@
 }
 
 body {
-    overflow: clip;
+    overflow: hidden;
     text-align: center;
     background-color: var(--bg-color);
     display: grid;
@@ -217,9 +221,15 @@ hr {
 
 #output-area {
     height: 100%;
-    overflow: hidden;
     padding: 4px 8px;
     box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+
+#output-area::-webkit-scrollbar {
+    display: none;
 }
 
 #output-area div {
@@ -238,6 +248,10 @@ hr {
 .prompt {
     display: inline;
     color: var(--accent-color);
+}
+
+.command-text {
+    color: var(--command-text);
 }
 
 .input-text {
@@ -285,6 +299,18 @@ body.terminal-page {
 
 .command-line {
     color: var(--text-color);
+}
+
+.dir-color {
+    color: var(--dir-color);
+}
+
+.file-color {
+    color: var(--file-color);
+}
+
+.exec-color {
+    color: var(--exec-color);
 }
 
 @media (max-width: 600px) {
