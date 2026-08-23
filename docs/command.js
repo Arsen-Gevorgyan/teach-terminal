@@ -12,11 +12,23 @@ function processCommand(input) {
 
     switch (cmd) {
         case 'pwd':
-            if (invalidFlag) {
-                return 'bash: pwd: ' + invalidFlag.slice(1) + ': invalid option\npwd: usage: pwd [-LP]';
-            }
             if (args.length > 0) {
-                return 'bash: pwd: too many arguments';
+                const flag = args[0];
+                if (flag === '--help') {
+                    return 'pwd: pwd [-LP]\n    Print the name of the current working directory.\n\n    Options:\n      -L  print the value of $PWD if it names the current working directory\n      -P  print the physical directory, without any symbolic links\n      --help     display this help and exit\n      --version  output version information and exit';
+                }
+                if (flag === '--version') {
+                    return 'pwd (GNU coreutils) 9.4';
+                }
+                if (flag === '-L' || flag === '--logical') {
+                    return fs.pwd();
+                }
+                if (flag === '-P' || flag === '--physical') {
+                    return fs.pwd();
+                }
+                if (flag.startsWith('-')) {
+                    return 'bash: pwd: ' + flag.slice(1) + ': invalid option\npwd: usage: pwd [-LP]';
+                }
             }
             return fs.pwd();
 
@@ -50,23 +62,66 @@ function processCommand(input) {
             return fs.cd(args[0] || '~');
 
         case 'mkdir':
-            if (invalidFlag) {
-                return 'mkdir: invalid option -- \'' + invalidFlag.slice(1) + '\'\nTry \'mkdir --help\' for more information.';
+            let mode = null;
+            let verbose = false;
+            let parents = false;
+            const dirs = [];
+
+            for (let i = 0; i < args.length; i++) {
+                const arg = args[i];
+                if (arg === '-p' || arg === '--parents') {
+                    parents = true;
+                } else if (arg === '-v' || arg === '--verbose') {
+                    verbose = true;
+                } else if (arg === '-m' || arg === '--mode') {
+                    mode = args[i + 1];
+                    i++;
+                } else if (arg.startsWith('-')) {
+                    return 'mkdir: invalid option -- \'' + arg.slice(1) + '\'\nTry \'mkdir --help\' for more information.';
+                } else {
+                    dirs.push(arg);
+                }
             }
-            if (!args[0]) {
+
+            if (dirs.length === 0) {
                 return 'mkdir: missing operand\nTry \'mkdir --help\' for more information.';
             }
-            return fs.mkdir(args[0]);
+
+            const results = [];
+            for (const dir of dirs) {
+                const result = fs.mkdir(dir, parents, mode, verbose);
+                if (result) results.push(result);
+            }
+            return results.join('\n');
 
         case 'touch':
-            if (invalidFlag) {
-                return 'touch: invalid option -- \'' + invalidFlag.slice(1) + '\'\nTry \'touch --help\' for more information.';
+            let noCreate = false;
+            const files = [];
+
+            for (let i = 0; i < args.length; i++) {
+                const arg = args[i];
+                if (arg === '-c' || arg === '--no-create') {
+                    noCreate = true;
+                } else if (arg === '-a' || arg === '-m') {
+                    continue;
+                } else if (arg.startsWith('-')) {
+                    return 'touch: invalid option -- \'' + arg.slice(1) + '\'\nTry \'touch --help\' for more information.';
+                } else {
+                    files.push(arg);
+                }
             }
-            if (!args[0]) {
+
+            if (files.length === 0) {
                 return 'touch: missing file operand\nTry \'touch --help\' for more information.';
             }
-            return fs.touch(args[0]);
 
+            const results = [];
+            for (const file of files) {
+                const result = fs.touch(file, noCreate);
+                if (result) results.push(result);
+            }
+            return results.join('\n');
+            
         case 'clear':
             if (invalidFlag) {
                 return 'clear: invalid option -- \'' + invalidFlag.slice(1) + '\'\nUsage: clear [options]\nOptions:\n  -T TERM     use this instead of $TERM\n  -V          print curses-version\n  -x          do not try to clear scrollback';

@@ -262,19 +262,59 @@ class FileSystem {
         return this.#resolvePath(path);
     }
 
-    mkdir(name) {
+    mkdir(name, parents = false, mode = null, verbose = false) {
         if (this.#cwd.getChild(name)) {
             return `mkdir: cannot create directory '${name}': File exists`;
         }
+
+        if (parents && name.includes('/')) {
+            const parts = name.split('/');
+            let current = this.#cwd;
+            let pathSoFar = this.#cwd.getAbsolutePath();
+
+            for (const part of parts) {
+                pathSoFar += '/' + part;
+                if (!current.getChild(part)) {
+                    const newFolder = new file(true, 7, 5, 5, pathSoFar, this.#username, this.#username);
+                    current.addChild(newFolder);
+                }
+                current = current.getChild(part);
+            }
+            if (verbose) {
+                return `mkdir: created directory '${name}'`;
+            }
+            return null;
+        }
+
         const newFolder = new file(true, 7, 5, 5, this.#cwd.getAbsolutePath() + '/' + name, this.#username, this.#username);
+
+        if (mode !== null) {
+            const perms = parseInt(mode, 8);
+            if (!isNaN(perms)) {
+                newFolder.permOwner = (perms >> 6) & 7;
+                newFolder.permGroup = (perms >> 3) & 7;
+                newFolder.permOther = perms & 7;
+            }
+        }
+
         this.#cwd.addChild(newFolder);
+
+        if (verbose) {
+            return `mkdir: created directory '${name}'`;
+        }
+
         return null;
     }
 
-    touch(name) {
-        if (this.#cwd.getChild(name)) {
-            return `touch: cannot create file '${name}': File exists`;
+    touch(name, noCreate = false) {
+        const existing = this.#cwd.getChild(name);
+        if (existing) {
+            return null;
         }
+        if (noCreate) {
+            return `touch: cannot touch '${name}': No such file or directory`;
+        }
+
         const newFile = new file(false, 6, 4, 4, this.#cwd.getAbsolutePath() + '/' + name, this.#username, this.#username);
         this.#cwd.addChild(newFile);
         return null;

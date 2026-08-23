@@ -25,8 +25,8 @@
             '--border-color': '#00ff00',
             '--login-bg': 'radial-gradient(circle, rgba(7, 51, 7, 1) 0%, rgba(0, 0, 0, 1) 100%)',
             '--command-text': '#ffaa00',
-            '--dir-color': '#00ff00',
-            '--file-color': '#00cc00',
+            '--dir-color': '#76ff76',
+            '--file-color': '#16c08a',
             '--exec-color': '#ffff00'
         },
         kali: {
