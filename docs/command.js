@@ -33,25 +33,55 @@ function processCommand(input) {
             return fs.pwd();
 
         case 'ls':
-            const badFlag = args.find(arg => arg.startsWith('-') && arg !== '-l');
-            if (badFlag) {
-                return 'ls: invalid option -- \'' + badFlag.slice(1) + '\'\nTry \'ls --help\' for more information.';
-            }
-            if (args.length === 0 || (args.length === 1 && args[0] === '-l')) {
-                return args[0] === '-l' ? fs.lsDetail() : fs.ls();
-            }
-            if (args[0] && !args[0].startsWith('-')) {
-                const target = fs.resolve(args[0]);
-                if (!target) {
-                    return 'ls: cannot access \'' + args[0] + '\': No such file or directory';
-                }
-                if (!target.isDirectory) {
-                    return args[0];
-                }
-                return target.getChildren().map(c => c.fileName).join('  ');
-            }
-            return 'ls: usage: ls [-l] [path]';
+            let showAll = false;
+            let longFormat = false;
+            let onePerLine = false;
+            const paths = [];
 
+            for (let i = 0; i < args.length; ++i) {
+                const arg = args[i];
+
+                if (arg === '--') {
+                    for (let j = i + 1; j < args.length; ++j) {
+                        paths.push(args[j]);
+                    }
+                    break;
+                }
+                if (arg === '--help') {
+                    return getCommandHelp('ls');
+                }
+                
+                if (arg.startsWith('-')) {
+                    const flags = arg.slice(1).split('');
+                    for (const flag of flags) {
+                        if (flag === 'a' || flag === 'A') showAll = true;
+                        else if (flag === 'l') longFormat = true;
+                        else if (flag === '1') onePerLine = true;
+                        else if (flag === 'h' || flag === 'r' || flag === 't' || flag === 'S' || flag === 'R') continue;
+                        else {
+                            return 'ls: invalid option -- \'' + flag + '\'\nTry \'ls --help\' for more information.';
+                        }
+                    }
+                } else {
+                    paths.push(arg);
+                }
+            }
+            if (paths.length === 0) {
+                if (longFormat) return fs.lsDetail();
+                const output = fs.ls();
+                return onePerLine ? output.replace(/  /g, '\n') : output;
+            }
+
+            const target = fs.resolve(paths[0]);
+            if (!target) {
+                return 'ls: cannot access \'' + paths[0] + '\':No such file or directory';
+            }
+            if (!target.isDirectory) {
+                return paths[0];
+            }
+            if (longFormat) return fs.lsDetailPath(target);
+            const pathOutput = fs.lsPath(target);
+            return onePerLine ? pathOutput.replace(/  /g, '\n') : pathOutput;
         case 'cd':
             if (invalidFlag) {
                 return 'bash: cd: ' + invalidFlag.slice(1) + ': invalid option\ncd: usage: cd [-L|[-P [-e]]] [-@] [dir]';
@@ -115,12 +145,12 @@ function processCommand(input) {
                 return 'touch: missing file operand\nTry \'touch --help\' for more information.';
             }
 
-            const results = [];
+            const touchResults = [];
             for (const file of files) {
                 const result = fs.touch(file, noCreate);
-                if (result) results.push(result);
+                if (result) touchResults.push(result);
             }
-            return results.join('\n');
+            return touchResults.join('\n');
             
         case 'clear':
             if (invalidFlag) {
@@ -154,7 +184,7 @@ function getCommandHelp(name) {
         case 'cd':
             return 'cd: cd [-L|[-P [-e]]] [-@] [dir]\n    Change the shell working directory.\n\n    Options:\n      -L  force symbolic links to be followed\n      -P  use physical directory structure';
         case 'ls':
-            return 'ls: ls [OPTION]... [FILE]...\n    List directory contents.\n\n    Options:\n      -l  use long listing format';
+            return 'ls: ls [OPTION]... [FILE]...\n    List directory contents.\n\n    Options:\n      -a, --all          do not ignore entries starting with .\n      -A, --almost-all   do not list implied . and ..\n      -l                 use a long listing format\n      -h, --human-readable  with -l, print sizes in human readable format\n      -r, --reverse      reverse order while sorting\n      -R, --recursive    list subdirectories recursively\n      -S                 sort by file size, largest first\n      -t                 sort by time, newest first\n      -1                 list one file per line';
         case 'mkdir':
             return 'mkdir: mkdir [OPTION]... DIRECTORY...\n    Create directories.\n\n    Options:\n      -p  make parent directories as needed';
         case 'touch':
