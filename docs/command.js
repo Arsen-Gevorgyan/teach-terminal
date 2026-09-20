@@ -36,6 +36,7 @@ function processCommand(input) {
             let showAll = false;
             let longFormat = false;
             let onePerLine = false;
+            let humanReadable = false;
             const paths = [];
 
             for (let i = 0; i < args.length; ++i) {
@@ -57,7 +58,8 @@ function processCommand(input) {
                         if (flag === 'a' || flag === 'A') showAll = true;
                         else if (flag === 'l') longFormat = true;
                         else if (flag === '1') onePerLine = true;
-                        else if (flag === 'h' || flag === 'r' || flag === 't' || flag === 'S' || flag === 'R') continue;
+                        else if (flag === 'h') humanReadable = true;
+                        else if (flag === 'r' || flag === 't' || flag === 'S' || flag === 'R') continue;
                         else {
                             return 'ls: invalid option -- \'' + flag + '\'\nTry \'ls --help\' for more information.';
                         }
@@ -67,7 +69,7 @@ function processCommand(input) {
                 }
             }
             if (paths.length === 0) {
-                if (longFormat) return fs.lsDetail();
+                if (longFormat) return fs.lsDetail(humanReadable);
                 const output = fs.ls();
                 return onePerLine ? output.replace(/  /g, '\n') : output;
             }
@@ -79,9 +81,10 @@ function processCommand(input) {
             if (!target.isDirectory) {
                 return paths[0];
             }
-            if (longFormat) return fs.lsDetailPath(target);
+            if (longFormat) return fs.lsDetailPath(target, humanReadable);
             const pathOutput = fs.lsPath(target);
             return onePerLine ? pathOutput.replace(/  /g, '\n') : pathOutput;
+            
         case 'cd':
             if (invalidFlag) {
                 return 'bash: cd: ' + invalidFlag.slice(1) + ': invalid option\ncd: usage: cd [-L|[-P [-e]]] [-@] [dir]';

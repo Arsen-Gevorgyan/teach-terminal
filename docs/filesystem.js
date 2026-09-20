@@ -11,6 +11,8 @@ class file {
     #content;
     #ownerName;
     #groupName;
+    #size;
+    #mtime;
 
     constructor(isDir, permOwner, permGroup, permOther, path, ownerName, groupName) {
         this.#isDirectory = isDir;
@@ -22,6 +24,24 @@ class file {
         this.#content = isDir ? new Map() : '';
         this.#ownerName = ownerName;
         this.#groupName = groupName;
+        this.#size = isDir ? 4096 : 0;
+        this.#mtime = new Date();
+    }
+
+    get size() {
+        return this.#size;
+    }
+
+    set size(value) {
+        this.#size = value;
+    }
+
+    get mtime() {
+        return this.#mtime;
+    }
+
+    set mtime(value) {
+        this.#mtime = value;
     }
 
     get fileName() {
@@ -181,9 +201,18 @@ class FileSystem {
         }).join('  ');
     }
 
-    lsDetail() {
+    lsDetail(humanReadable = false) {
         const children = this.#cwd.getChildren();
-        return children.map(child => {
+
+        let total = 0;
+        children.forEach(child => {
+            total += child.size;
+        });
+
+        const totalStr = humanReadable ? Math.ceil(total / 1024) + 'K' : String(total);
+        const lines = ['total ' + totalStr];
+
+        for (const child of children) {
             let nameSpan;
             if (child.isDirectory) {
                 nameSpan = '<span class="dir-color">' + child.fileName + '</span>';
@@ -192,8 +221,85 @@ class FileSystem {
             } else {
                 nameSpan = '<span class="file-color">' + child.fileName + '</span>';
             }
-            return child.getPermissionString() + ' ' + child.ownerName + ' ' + child.groupName + ' ' + nameSpan;
-        }).join('\n');
+
+            const perm = child.getPermissionString();
+            const links = child.isDirectory ? child.getChildren().length : 1;
+            const size = this.formatSize(child.size, humanReadable);
+            const date = this.formatDate(child.mtime);
+
+            const line = perm + ' ' +
+                String(links).padStart(2, ' ') + ' ' +
+                child.ownerName + ' ' +
+                child.groupName + ' ' +
+                String(size).padStart(5, ' ') + ' ' +
+                date + ' ' +
+                nameSpan;
+
+            lines.push(line);
+        }
+        return lines.join('\n');
+    }
+
+    lsDetailPath(target, humanReadable = false) {
+        const children = target.getChildren();
+
+        let total = 0;
+        children.forEach(child => {
+            total += child.size;
+        });
+
+        const totalStr = humanReadable ? Math.ceil(total / 1024) + 'K' : String(total);
+        const lines = ['total ' + totalStr];
+
+        for (const child of children) {
+            let nameSpan;
+            if (child.isDirectory) {
+                nameSpan = '<span class="dir-color">' + child.fileName + '</span>';
+            }
+            else if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
+                nameSpan = '<span class="exec-color">' + child.fileName + '</span>';
+            }
+            else {
+                nameSpan = '<span class="file-color">' + child.fileName + '</span>';
+            }
+
+            const perm = child.getPermissionString();
+            const links = child.isDirectory ? child.getChildren().length : 1;
+            const size = this.formatSize(child.size, humanReadable);
+            const date = this.formatDate(child.mtime);
+
+            const line = perm + ' ' + String(links).padStart(2, ' ') + ' ' + child.ownerName + ' ' + child.groupName + ' ' + String(size).padStart(5, ' ') + ' ' + date + ' ' + nameSpan;
+            lines.push(line);
+        }
+        return lines.join('\n');
+    }
+
+    lsPath(target) {
+        return target.getChildren().map(child => {
+            if (child.isDirectory) {
+                return '<span class="dir-color">' + child.fileName + '</span>';
+            }
+            if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
+                return '<span class="exec-color">' + child.fileName + '</span>';
+            }
+            return '<span class="file-color">' + child.fileName + '</span>';
+        }).join('  ');
+    }
+
+    formatDate(date) {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = months[date.getMonth()];
+        const day = date.getDate();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return month + ' ' + String(day).padStart(2, ' ') + ' ' + hours + ':' + minutes;
+    }
+
+    formatSize(size, humanReadable) {
+        if (!humanReadable) return String(size);
+        if (size < 1024) return size + 'B';
+        if (size < 1024 * 1024) return (size / 1024).toFixed(1) + 'K';
+        return (size / (1024 * 1024)).toFixed(1) + 'M';
     }
 
     cd(path) {
