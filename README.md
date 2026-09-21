@@ -17,15 +17,15 @@
 - **commands.js** - Command recognition and execution
 
 ## Current Commands Amd Flags
-`pwd` | `-L`, `-P`, `--help`, `--version` |
-`help` | `-a`, `-A`, `-l`, `-h`, `-r`, `-R`, `-S`, `-t`, `-1`, `--help` |
-`clear` | -- |
-`echo` | `-n`, `-e`, `-E` |
-`cd` | `~`, `.`, `..`, absolute, relative |
-`mkdir` | `-p`, `-m`, `-v` |
-`touch` | `-c`, `-a`, `-m` |
-`cat` | `-n`, `-b`, `-s`, `-E`, `-T` |
-`help` | per-comand |
+* `pwd` | `-L`, `-P`, `--help`, `--version` |
+* `help` | `-a`, `-A`, `-l`, `-h`, `-r`, `-R`, `-S`, `-t`, `-1`, `--help` |
+* `clear` | -- |
+* `echo` | `-n`, `-e`, `-E` |
+* `cd` | `~`, `.`, `..`, absolute, relative |
+* `mkdir` | `-p`, `-m`, `-v` |
+* `touch` | `-c`, `-a`, `-m` |
+* `cat` | `-n`, `-b`, `-s`, `-E`, `-T` |
+* `help` | per-comand |
 
 ## Today's Tasks
 
