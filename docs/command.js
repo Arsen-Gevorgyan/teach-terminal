@@ -34,57 +34,54 @@ function processCommand(input) {
 
         case 'ls':
             let showAll = false;
+            let showAlmostAll = false;
             let longFormat = false;
-            let onePerLine = false;
             let humanReadable = false;
-            const paths = [];
+            let reverse = false;
+            let recursive = false;
+            let sortBySize = false;
+            let sortByTime = false;
+            let onePerLine = false;
+            let lsPath = null;
 
-            for (let i = 0; i < args.length; ++i) {
+            for (let i = 0; i < args.length; i++) {
                 const arg = args[i];
 
                 if (arg === '--') {
-                    for (let j = i + 1; j < args.length; ++j) {
-                        paths.push(args[j]);
+                    if (i + 1 < args.length) {
+                        lsPath = args[i + 1];
                     }
                     break;
                 }
+
                 if (arg === '--help') {
                     return getCommandHelp('ls');
                 }
-                
-                if (arg.startsWith('-')) {
+
+                if (arg.startsWith('-') && arg !== '-') {
                     const flags = arg.slice(1).split('');
                     for (const flag of flags) {
-                        if (flag === 'a' || flag === 'A') showAll = true;
+                        if (flag === 'a') showAll = true;
+                        else if (flag === 'A') showAlmostAll = true;
                         else if (flag === 'l') longFormat = true;
-                        else if (flag === '1') onePerLine = true;
                         else if (flag === 'h') humanReadable = true;
-                        else if (flag === 'r' || flag === 't' || flag === 'S' || flag === 'R') continue;
-                        else {
-                            return 'ls: invalid option -- \'' + flag + '\'\nTry \'ls --help\' for more information.';
-                        }
+                        else if (flag === 'r') reverse = true;
+                        else if (flag === 'R') recursive = true;
+                        else if (flag === 'S') sortBySize = true;
+                        else if (flag === 't') sortByTime = true;
+                        else if (flag === '1') onePerLine = true;
+                        else return 'ls: invalid option -- \'' + flag + '\'\nTry \'ls --help\' for more information.';
                     }
                 } else {
-                    paths.push(arg);
+                    lsPath = arg;
                 }
             }
-            if (paths.length === 0) {
-                if (longFormat) return fs.lsDetail(humanReadable);
-                const output = fs.ls();
-                return onePerLine ? output.replace(/  /g, '\n') : output;
-            }
 
-            const target = fs.resolve(paths[0]);
-            if (!target) {
-                return 'ls: cannot access \'' + paths[0] + '\':No such file or directory';
-            }
-            if (!target.isDirectory) {
-                return paths[0];
-            }
-            if (longFormat) return fs.lsDetailPath(target, humanReadable);
-            const pathOutput = fs.lsPath(target);
-            return onePerLine ? pathOutput.replace(/  /g, '\n') : pathOutput;
-            
+            return fs.formatLs({
+                showAll, showAlmostAll, longFormat, humanReadable,
+                reverse, recursive, sortBySize, sortByTime, onePerLine, path: lsPath
+            });
+
         case 'cd':
             if (invalidFlag) {
                 return 'bash: cd: ' + invalidFlag.slice(1) + ': invalid option\ncd: usage: cd [-L|[-P [-e]]] [-@] [dir]';
@@ -154,7 +151,53 @@ function processCommand(input) {
                 if (result) touchResults.push(result);
             }
             return touchResults.join('\n');
-            
+
+        case 'echo':
+            let noNewline = false;
+            let enableEscapes = false;
+            const echoParts = [];
+
+            for (let i = 0; i < args.length; i++) {
+                const arg = args[i];
+
+                if (arg === '--help') {
+                    return getCommandHelp('echo');
+                }
+
+                if (arg.startsWith('-') && arg !== '-') {
+                    let knownFlag = true;
+                    const flags = arg.slice(1).split('');
+                    for (const flag of flags) {
+                        if (flag === 'n') {
+                            noNewline = true;
+                        } else if (flag === 'e') {
+                            enableEscapes = true;
+                        } else if (flag === 'E') {
+                            enableEscapes = false;
+                        } else {
+                            knownFlag = false;
+                            break;
+                        }
+                    }
+                    if (!knownFlag) {
+                        echoParts.push(arg);
+                    }
+                } else {
+                    echoParts.push(arg);
+                }
+            }
+
+            let result = echoParts.join(' ');
+
+            if (enableEscapes) {
+                result = result
+                    .replace(/\\n/g, '\n')
+                    .replace(/\\t/g, '\t')
+                    .replace(/\\\\/g, '\\');
+            }
+
+            return result;
+
         case 'clear':
             if (invalidFlag) {
                 return 'clear: invalid option -- \'' + invalidFlag.slice(1) + '\'\nUsage: clear [options]\nOptions:\n  -T TERM     use this instead of $TERM\n  -V          print curses-version\n  -x          do not try to clear scrollback';
@@ -192,6 +235,8 @@ function getCommandHelp(name) {
             return 'mkdir: mkdir [OPTION]... DIRECTORY...\n    Create directories.\n\n    Options:\n      -p  make parent directories as needed';
         case 'touch':
             return 'touch: touch [OPTION]... FILE...\n    Update file timestamps.\n\n    Options:\n      -c  do not create any files';
+        case 'echo':
+            return 'echo: echo [-neE] [arg ...]\n    Write arguments to the stadart output.\n\n    Options:\n    -n do not output the trailing newline\n    -e enabel interpretation of backslash escapes\n    -E diable interpretation of backslash escapes (default)';
         case 'clear':
             return 'clear: clear [options]\n    Clear the terminal screen.\n\n    Options:\n      -V  print curses-version\n      -x  do not try to clear scrollback';
         default:
@@ -207,7 +252,8 @@ function getHelpSummary() {
         '  ls:       List directory contents\n' +
         '  mkdir:       Create directories\n' +
         '  pwd:      Print the current working directory\n' +
-        '  touch:      Create empty files';
+        '  touch:      Create empty files\n' +
+        '  echo:      Display a line of text\n';
 }
 
 function getHelpUsage() {

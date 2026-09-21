@@ -191,13 +191,13 @@ class FileSystem {
     formatLs(options = {}) {
         const opts = {
             showAll: false,
-            showAllmostAll: false,
+            showAlmostAll: false,
             longFormat: false,
             humanReadable: false,
             reverse: false,
             recursive: false,
-            shortBySize: false,
-            shortByTime: false,
+            sortBySize: false,
+            sortByTime: false,
             onePerLine: false,
             path: null
         };
@@ -214,20 +214,19 @@ class FileSystem {
             }
             target = resolved;
         }
+
         let children = target.getChildren();
 
-        if (!opts.showAll && !opts.showAllmostAll) {
+        if (!opts.showAll && !opts.showAlmostAll) {
             children = children.filter(c => !c.fileName.startsWith('.'));
         }
 
-        if(opts.shortBySize) {
-            children.sort((a , b) => b.size - a.size);
-        }
-        else if (opts.shortByTime) {
-            children.short((a, b) => b.mtime - a.mtime);
-        }
-        else {
-            children.short((a, b) => a.fileName.localCompare(b.fileName));
+        if (opts.sortBySize) {
+            children.sort((a, b) => b.size - a.size);
+        } else if (opts.sortByTime) {
+            children.sort((a, b) => b.mtime - a.mtime);
+        } else {
+            children.sort((a, b) => a.fileName.localeCompare(b.fileName));
         }
 
         if (opts.reverse) {
@@ -236,9 +235,6 @@ class FileSystem {
 
         if (opts.showAll) {
             children = ['.', '..', ...children];
-        }
-        else if (opts.showAllmostAll) {
-
         }
 
         if (opts.longFormat) {
@@ -278,7 +274,7 @@ class FileSystem {
             }
         }
 
-        const totalStr = opts.humanReadable ? Math.ceil(total /1024) + 'K' : String(total);
+        const totalStr = opts.humanReadable ? Math.ceil(total / 1024) + 'K' : String(total);
         const lines = ['total ' + totalStr];
 
         for (const child of children) {
@@ -288,7 +284,7 @@ class FileSystem {
                 const group = child === '.' ? this.#username : 'root';
                 const nameSpan = '<span class="dir-color">' + child + '</span>';
                 const date = this.formatDate(new Date());
-                lines.path(perm + ' 0 ' + owner + ' ' + group + ' 4096 ' + date + ' ' + nameSpan);
+                lines.push(perm + ' 0 ' + owner + ' ' + group + ' 4096 ' + date + ' ' + nameSpan);
                 continue;
             }
 
@@ -312,105 +308,6 @@ class FileSystem {
             return '<span class="exec-color">' + child.fileName + '</span>';
         }
         return '<span class="file-color">' + child.fileName + '</span>';
-    }
-    
-
-    ls() {
-        const children = this.#cwd.getChildren();
-        return children.map(child => {
-            if (child.isDirectory) {
-                return '<span class="dir-color">' + child.fileName + '</span>';
-            }
-            if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
-                return '<span class="exec-color">' + child.fileName + '</span>';
-            }
-            return '<span class="file-color">' + child.fileName + '</span>';
-        }).join('  ');
-    }
-
-    lsDetail(humanReadable = false) {
-        const children = this.#cwd.getChildren();
-
-        let total = 0;
-        children.forEach(child => {
-            total += child.size;
-        });
-
-        const totalStr = humanReadable ? Math.ceil(total / 1024) + 'K' : String(total);
-        const lines = ['total ' + totalStr];
-
-        for (const child of children) {
-            let nameSpan;
-            if (child.isDirectory) {
-                nameSpan = '<span class="dir-color">' + child.fileName + '</span>';
-            } else if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
-                nameSpan = '<span class="exec-color">' + child.fileName + '</span>';
-            } else {
-                nameSpan = '<span class="file-color">' + child.fileName + '</span>';
-            }
-
-            const perm = child.getPermissionString();
-            const links = child.isDirectory ? child.getChildren().length : 1;
-            const size = this.formatSize(child.size, humanReadable);
-            const date = this.formatDate(child.mtime);
-
-            const line = perm + ' ' +
-                String(links).padStart(2, ' ') + ' ' +
-                child.ownerName + ' ' +
-                child.groupName + ' ' +
-                String(size).padStart(5, ' ') + ' ' +
-                date + ' ' +
-                nameSpan;
-
-            lines.push(line);
-        }
-        return lines.join('\n');
-    }
-
-    lsDetailPath(target, humanReadable = false) {
-        const children = target.getChildren();
-
-        let total = 0;
-        children.forEach(child => {
-            total += child.size;
-        });
-
-        const totalStr = humanReadable ? Math.ceil(total / 1024) + 'K' : String(total);
-        const lines = ['total ' + totalStr];
-
-        for (const child of children) {
-            let nameSpan;
-            if (child.isDirectory) {
-                nameSpan = '<span class="dir-color">' + child.fileName + '</span>';
-            }
-            else if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
-                nameSpan = '<span class="exec-color">' + child.fileName + '</span>';
-            }
-            else {
-                nameSpan = '<span class="file-color">' + child.fileName + '</span>';
-            }
-
-            const perm = child.getPermissionString();
-            const links = child.isDirectory ? child.getChildren().length : 1;
-            const size = this.formatSize(child.size, humanReadable);
-            const date = this.formatDate(child.mtime);
-
-            const line = perm + ' ' + String(links).padStart(2, ' ') + ' ' + child.ownerName + ' ' + child.groupName + ' ' + String(size).padStart(5, ' ') + ' ' + date + ' ' + nameSpan;
-            lines.push(line);
-        }
-        return lines.join('\n');
-    }
-
-    lsPath(target) {
-        return target.getChildren().map(child => {
-            if (child.isDirectory) {
-                return '<span class="dir-color">' + child.fileName + '</span>';
-            }
-            if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
-                return '<span class="exec-color">' + child.fileName + '</span>';
-            }
-            return '<span class="file-color">' + child.fileName + '</span>';
-        }).join('  ');
     }
 
     formatDate(date) {
