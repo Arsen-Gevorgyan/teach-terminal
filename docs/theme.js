@@ -19,14 +19,14 @@
         hacker: {
             '--bg-color': '#0a0a0a',
             '--text-color': '#00ff00',
-            '--accent-color': '#0fb60f',
+            '--accent-color': '#148214',
             '--card-bg': 'rgba(0, 0, 0, 0.9)',
             '--button-bg': '#003300',
-            '--border-color': '#00ff00',
+            '--border-color': '#098409',
             '--login-bg': 'radial-gradient(circle, rgba(7, 51, 7, 1) 0%, rgba(0, 0, 0, 1) 100%)',
             '--command-text': '#ffaa00',
             '--dir-color': '#76ff76',
-            '--file-color': '#16c08a',
+            '--file-color': '#058a60',
             '--exec-color': '#ffff00'
         },
         kali: {

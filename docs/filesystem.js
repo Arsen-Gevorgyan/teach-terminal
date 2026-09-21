@@ -188,6 +188,133 @@ class FileSystem {
         return path === '' ? '/' : path;
     }
 
+    formatLs(options = {}) {
+        const opts = {
+            showAll: false,
+            showAllmostAll: false,
+            longFormat: false,
+            humanReadable: false,
+            reverse: false,
+            recursive: false,
+            shortBySize: false,
+            shortByTime: false,
+            onePerLine: false,
+            path: null
+        };
+        Object.assign(opts, options);
+
+        let target = this.#cwd;
+        if (opts.path) {
+            const resolved = this.#resolvePath(opts.path);
+            if (!resolved) {
+                return `ls: cannot access '${opts.path}': No such file or directory`;
+            }
+            if (!resolved.isDirectory) {
+                return opts.path;
+            }
+            target = resolved;
+        }
+        let children = target.getChildren();
+
+        if (!opts.showAll && !opts.showAllmostAll) {
+            children = children.filter(c => !c.fileName.startsWith('.'));
+        }
+
+        if(opts.shortBySize) {
+            children.sort((a , b) => b.size - a.size);
+        }
+        else if (opts.shortByTime) {
+            children.short((a, b) => b.mtime - a.mtime);
+        }
+        else {
+            children.short((a, b) => a.fileName.localCompare(b.fileName));
+        }
+
+        if (opts.reverse) {
+            children.reverse();
+        }
+
+        if (opts.showAll) {
+            children = ['.', '..', ...children];
+        }
+        else if (opts.showAllmostAll) {
+
+        }
+
+        if (opts.longFormat) {
+            return this.formatLongListing(children, target, opts);
+        }
+        return this.formatShortListing(children, opts);
+    }
+
+    formatShortListing(children, opts) {
+        const names = children.map(child => {
+            if (child === '.' || child === '..') {
+                return '<span class="dir-color">' + child + '</span>';
+            }
+            if (child.isDirectory) {
+                return '<span class="dir-color">' + child.fileName + '</span>';
+            }
+            if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
+                return '<span class="exec-color">' + child.fileName + '</span>';
+            }
+            return '<span class="file-color">' + child.fileName + '</span>';
+        });
+
+        if (opts.onePerLine) {
+            return names.join('\n');
+        }
+        return names.join('  ');
+    }
+
+    formatLongListing(children, target, opts) {
+        let total = 0;
+        for (const child of children) {
+            if (child === '.' || child === '..') {
+                total += 4096;
+            }
+            else {
+                total += child.size;
+            }
+        }
+
+        const totalStr = opts.humanReadable ? Math.ceil(total /1024) + 'K' : String(total);
+        const lines = ['total ' + totalStr];
+
+        for (const child of children) {
+            if (child === '.' || child === '..') {
+                const perm = child === '.' ? 'drwx------' : 'drwxr-xr-x';
+                const owner = child === '.' ? this.#username : 'root';
+                const group = child === '.' ? this.#username : 'root';
+                const nameSpan = '<span class="dir-color">' + child + '</span>';
+                const date = this.formatDate(new Date());
+                lines.path(perm + ' 0 ' + owner + ' ' + group + ' 4096 ' + date + ' ' + nameSpan);
+                continue;
+            }
+
+            const nameSpan = this.getColoredName(child);
+            const perm = child.getPermissionString();
+            const links = child.isDirectory ? child.getChildren().length : 1;
+            const size = this.formatSize(child.size, opts.humanReadable);
+            const date = this.formatDate(child.mtime);
+
+            const line = perm + ' ' + String(links).padStart(2, ' ') + ' ' + child.ownerName + ' ' + child.groupName + ' ' + String(size).padStart(5, ' ') + ' ' + date + ' ' + nameSpan;
+            lines.push(line);
+        }
+        return lines.join('\n');
+    }
+
+    getColoredName(child) {
+        if (child.isDirectory) {
+            return '<span class="dir-color">' + child.fileName + '</span>';
+        }
+        if (child.fileName.endsWith('.exe') || child.fileName.endsWith('.out')) {
+            return '<span class="exec-color">' + child.fileName + '</span>';
+        }
+        return '<span class="file-color">' + child.fileName + '</span>';
+    }
+    
+
     ls() {
         const children = this.#cwd.getChildren();
         return children.map(child => {
