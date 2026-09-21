@@ -392,6 +392,17 @@ class FileSystem {
         return this.#resolvePath(path);
     }
 
+    readFile(name) {
+        const target = this.#cwd.getChild(name);
+        if (!target) {
+            return { error: `cat: ${name}: No such file or directory` };
+        }
+        if (target.isDirectory) {
+            return { error: `cat: ${name}: Is a directory` };
+        }
+        return { content: target.content };
+    }
+
     mkdir(name, parents = false, mode = null, verbose = false) {
         if (this.#cwd.getChild(name)) {
             return `mkdir: cannot create directory '${name}': File exists`;

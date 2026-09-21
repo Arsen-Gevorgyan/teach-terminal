@@ -198,6 +198,105 @@ function processCommand(input) {
 
             return result;
 
+        case 'cat':
+            let numberAll = false;
+            let numbersNonBlank = false;
+            let squeezeBlank = false;
+            let showEnds = false;
+            let showTabs = false;
+            const catFiles = [];
+
+            for (let i = 0; i < args.length; ++i) {
+                const arg = args[i];
+
+                if (arg === '--help') {
+                    return getCommandHelp('cat');
+                }
+                if (arg.startsWith('-') && arg !== '-') {
+                    const flags = arg.slice(1).split('');
+                    for (const flag of flags) {
+                        if (flag === 'n') {
+                            numberAll = true;
+                        }
+                        else if (flag === 'b') {
+                            numbersNonBlank = true;
+                        }
+                        else if (flag ==='s') {
+                            squeezeBlank = true;
+                        }
+                        else if (flag ==='E') {
+                            showEnds = true;
+                        }
+                        else if (flag === 'T') {
+                            showTabs = true;
+                        }
+                        else {
+                            return 'cat: invalid option -- \'' + flag + '\'\nTry \'cat --hrlp\' for more information.';
+                        }
+                    }
+                }
+                else {
+                    catFiles.push(arg);
+                }
+            }
+            if (catFiles.length === 0) {
+                return 'cat: missing operand\nTry \'cat --help\' for more information.';
+            }
+
+            const catResults = [];
+            let lineNumber = 1;
+            let lastWasBlank = false;
+
+            for (const file of catFiles) {
+                const result = fs.readFile(file);
+                if (result.error) {
+                    catResults.push(result.error);
+                    continue;
+                }
+                let content = result.content || '';
+                if (content === '') {
+                    continue;
+                }
+                let lines = content.split('\n');
+
+                if (squeezeBlank) {
+                    const squeezed = [];
+                    let prevBlank = false;
+                    for (const line of lines) {
+                        const isBlank = line === '';
+                        if (isBlank && prevBlank) {
+                            continue;
+                        }
+                        squeezed.push(line);
+                        prevBlank = isBlank;
+                    }
+                    lines = squeezed;
+                }
+
+                const outputLines = [];
+                for (const line of lines) {
+                    let prefix = '';
+                    const isBlan = line === '';
+
+                    if (numberAll || (numberNoneBlank && !isBlank)) {
+                        prefix = String(lineNumber).padStart(6, ' ') + '\t';
+                        ++lineNumber;
+                    }
+
+                    let processedLine = line;
+                    if (showTabs) {
+                        processedLine = processedLine.replaces(/\t/g, '^I');
+                    }
+                    if (showEnds) {
+                        processedLine = processedLine + '$';
+                    }
+
+                    outputLines.push(prefix + processedLine);
+                }
+                catResults.push(outputLines.join('\n'));
+            }
+            return catResults.join('\n');
+ 
         case 'clear':
             if (invalidFlag) {
                 return 'clear: invalid option -- \'' + invalidFlag.slice(1) + '\'\nUsage: clear [options]\nOptions:\n  -T TERM     use this instead of $TERM\n  -V          print curses-version\n  -x          do not try to clear scrollback';
@@ -239,6 +338,8 @@ function getCommandHelp(name) {
             return 'echo: echo [-neE] [arg ...]\n    Write arguments to the stadart output.\n\n    Options:\n    -n do not output the trailing newline\n    -e enabel interpretation of backslash escapes\n    -E diable interpretation of backslash escapes (default)';
         case 'clear':
             return 'clear: clear [options]\n    Clear the terminal screen.\n\n    Options:\n      -V  print curses-version\n      -x  do not try to clear scrollback';
+        case 'cat':
+            return 'cat: cat [OPTION]... [FILE]...\n     Concatenate FILE(s) to stadartd output.\n\n    Options:\n    -n, --number        number all output lines\n    -b, --number-nonblank number nonempty output lines\n    -s, --squeeze-blank suppress repeated empty output lines\n    -E, --show-ends    display $ at end of each line\n    -T, --show-tabs    display TAB characters as ^I';
         default:
             return 'help: no help topics match \'' + name + '\'.  Try \'help help\' or \'man -k ' + name + '\'.';
     }
@@ -253,7 +354,8 @@ function getHelpSummary() {
         '  mkdir:       Create directories\n' +
         '  pwd:      Print the current working directory\n' +
         '  touch:      Create empty files\n' +
-        '  echo:      Display a line of text\n';
+        '  echo:      Display a line of text\n' +
+        '  cat:      Concatenate files and print\n';
 }
 
 function getHelpUsage() {
