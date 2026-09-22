@@ -11,7 +11,7 @@ function processCommand(input) {
     const invalidFlag = args.find(arg => arg.startsWith('-'));
 
     switch (cmd) {
-        case 'pwd':
+        case 'pwd': {
             if (args.length > 0) {
                 const flag = args[0];
                 if (flag === '--help') {
@@ -31,8 +31,10 @@ function processCommand(input) {
                 }
             }
             return fs.pwd();
+        }
 
-        case 'ls':
+        
+        case 'ls': {
             let showAll = false;
             let showAlmostAll = false;
             let longFormat = false;
@@ -81,8 +83,9 @@ function processCommand(input) {
                 showAll, showAlmostAll, longFormat, humanReadable,
                 reverse, recursive, sortBySize, sortByTime, onePerLine, path: lsPath
             });
+        }
 
-        case 'cd':
+        case 'cd': {
             if (invalidFlag) {
                 return 'bash: cd: ' + invalidFlag.slice(1) + ': invalid option\ncd: usage: cd [-L|[-P [-e]]] [-@] [dir]';
             }
@@ -90,8 +93,9 @@ function processCommand(input) {
                 return 'bash: cd: too many arguments';
             }
             return fs.cd(args[0] || '~');
+        }
 
-        case 'mkdir':
+        case 'mkdir': {
             let mode = null;
             let verbose = false;
             let parents = false;
@@ -117,14 +121,15 @@ function processCommand(input) {
                 return 'mkdir: missing operand\nTry \'mkdir --help\' for more information.';
             }
 
-            const results = [];
+            const mkdirResults = [];
             for (const dir of dirs) {
                 const result = fs.mkdir(dir, parents, mode, verbose);
-                if (result) results.push(result);
+                if (result) mkdirResults.push(result);
             }
-            return results.join('\n');
+            return mkdirResults.join('\n');
+        }
 
-        case 'touch':
+        case 'touch': {
             let noCreate = false;
             const files = [];
 
@@ -151,8 +156,9 @@ function processCommand(input) {
                 if (result) touchResults.push(result);
             }
             return touchResults.join('\n');
+        }
 
-        case 'echo':
+        case 'echo': {
             let noNewline = false;
             let enableEscapes = false;
             const echoParts = [];
@@ -197,16 +203,17 @@ function processCommand(input) {
             }
 
             return result;
+        }
 
-        case 'cat':
+        case 'cat': {
             let numberAll = false;
-            let numbersNonBlank = false;
+            let numberNonBlank = false;
             let squeezeBlank = false;
             let showEnds = false;
             let showTabs = false;
             const catFiles = [];
 
-            for (let i = 0; i < args.length; ++i) {
+            for (let i = 0; i < args.length; i++) {
                 const arg = args[i];
 
                 if (arg === '--help') {
@@ -215,37 +222,24 @@ function processCommand(input) {
                 if (arg.startsWith('-') && arg !== '-') {
                     const flags = arg.slice(1).split('');
                     for (const flag of flags) {
-                        if (flag === 'n') {
-                            numberAll = true;
-                        }
-                        else if (flag === 'b') {
-                            numbersNonBlank = true;
-                        }
-                        else if (flag ==='s') {
-                            squeezeBlank = true;
-                        }
-                        else if (flag ==='E') {
-                            showEnds = true;
-                        }
-                        else if (flag === 'T') {
-                            showTabs = true;
-                        }
-                        else {
-                            return 'cat: invalid option -- \'' + flag + '\'\nTry \'cat --hrlp\' for more information.';
-                        }
+                        if (flag === 'n') numberAll = true;
+                        else if (flag === 'b') numberNonBlank = true;
+                        else if (flag === 's') squeezeBlank = true;
+                        else if (flag === 'E') showEnds = true;
+                        else if (flag === 'T') showTabs = true;
+                        else return 'cat: invalid option -- \'' + flag + '\'\nTry \'cat --help\' for more information.';
                     }
-                }
-                else {
+                } else {
                     catFiles.push(arg);
                 }
             }
+
             if (catFiles.length === 0) {
                 return 'cat: missing operand\nTry \'cat --help\' for more information.';
             }
 
             const catResults = [];
             let lineNumber = 1;
-            let lastWasBlank = false;
 
             for (const file of catFiles) {
                 const result = fs.readFile(file);
@@ -254,9 +248,8 @@ function processCommand(input) {
                     continue;
                 }
                 let content = result.content || '';
-                if (content === '') {
-                    continue;
-                }
+                if (content === '') continue;
+
                 let lines = content.split('\n');
 
                 if (squeezeBlank) {
@@ -264,9 +257,7 @@ function processCommand(input) {
                     let prevBlank = false;
                     for (const line of lines) {
                         const isBlank = line === '';
-                        if (isBlank && prevBlank) {
-                            continue;
-                        }
+                        if (isBlank && prevBlank) continue;
                         squeezed.push(line);
                         prevBlank = isBlank;
                     }
@@ -276,41 +267,197 @@ function processCommand(input) {
                 const outputLines = [];
                 for (const line of lines) {
                     let prefix = '';
-                    const isBlan = line === '';
+                    const isBlank = line === '';
 
-                    if (numberAll || (numberNoneBlank && !isBlank)) {
+                    if (numberAll || (numberNonBlank && !isBlank)) {
                         prefix = String(lineNumber).padStart(6, ' ') + '\t';
-                        ++lineNumber;
+                        lineNumber++;
                     }
 
                     let processedLine = line;
-                    if (showTabs) {
-                        processedLine = processedLine.replaces(/\t/g, '^I');
-                    }
-                    if (showEnds) {
-                        processedLine = processedLine + '$';
-                    }
+                    if (showTabs) processedLine = processedLine.replace(/\t/g, '^I');
+                    if (showEnds) processedLine = processedLine + '$';
 
                     outputLines.push(prefix + processedLine);
                 }
                 catResults.push(outputLines.join('\n'));
             }
             return catResults.join('\n');
- 
-        case 'clear':
+        }
+
+        case 'rm': {
+            let force = false;
+            let interactive = false;
+            let recursive = false;
+            let verbose = false;
+            const rmTargets = [];
+
+            for (let i = 0; i < args.length; i++) {
+                const arg = args[i];
+                if (arg === '--help') return getCommandHelp('rm');
+                if (arg === '--') {
+                    for (let j = i + 1; j < args.length; j++) rmTargets.push(args[j]);
+                    break;
+                }
+                if (arg.startsWith('-') && arg !== '-') {
+                    const flags = arg.slice(1).split('');
+                    for (const flag of flags) {
+                        if (flag === 'f') force = true;
+                        else if (flag === 'i') interactive = true;
+                        else if (flag === 'r' || flag === 'R') recursive = true;
+                        else if (flag === 'v') verbose = true;
+                        else if (flag === 'd') continue;
+                        else return 'rm: invalid option -- \'' + flag + '\'\nTry \'rm --help\' for more information.';
+                    }
+                } else {
+                    rmTargets.push(arg);
+                }
+            }
+
+            if (rmTargets.length === 0) {
+                return 'rm: missing operand\nTry \'rm --help\' for more information.';
+            }
+
+            const rmResults = [];
+            for (const target of rmTargets) {
+                const result = fs.remove(target, recursive);
+                if (result.error) {
+                    if (!force) rmResults.push(result.error);
+                } else if (verbose) {
+                    rmResults.push("removed '" + target + "'");
+                }
+            }
+            return rmResults.join('\n');
+        }
+
+        case 'cp': {
+            let recursive = false;
+            let force = false;
+            let interactive = false;
+            let verbose = false;
+            let noClobber = false;
+            const cpArgs = [];
+
+            for (let i = 0; i < args.length; ++i) {
+                const arg = args[i];
+                if (arg === '--help') {
+                    return getCommandHelp('cp');
+                }
+                if (arg === '--') {
+                    for (let j = i + 1; j < args.length; j++) cpArgs.push(args[j]);
+                    break;
+                }
+                if (arg.startsWith('-') && arg !== '-') {
+                    const flags = arg.slice(1).split('');
+                    for (const flag of flags) {
+                        if (flag === 'r' || flag === 'R') recursive = true;
+                        else if (flag === 'f') force = true;
+                        else if (flag === 'i') interactive = true;
+                        else if (flag === 'v') verbose = true;
+                        else if (flag === 'n') noClobber = true;
+                        else return 'cp: invalid option -- \'' + flag + '\'\n Try \'cp --help\' for more information.';
+                    }
+                }
+                else {
+                    cpArgs.push(arg);
+                }
+            }
+
+            if (cpArgs.length === 0) {
+                return 'cp: missing file operand\nTry \'cp --help\' for more information.';
+            }
+            if (cpArgs.length === 1) {
+                return 'cp: missing destination file operand after \'' + cpArgs[0] + '\'\nTry \'cp --help\' for more information.';
+            }
+
+            const dest = cpArgs[cpArgs.length - 1];
+            const sources = cpArgs.slice(0, -1);
+            const cpResults = [];
+
+            for (const src of sources) {
+                const result = fs.copy(src, dest, recursive, noClobber);
+                if (result.error) {
+                    cpResults.push(result.error);
+                }
+                else if (verbose && !result.skipped) {
+                    cpResults.push("'" + src + "' -> '" + dest + "'");
+                }
+            }
+            return cpResults.join('\n');
+        }
+
+        case 'clear': {
             if (invalidFlag) {
                 return 'clear: invalid option -- \'' + invalidFlag.slice(1) + '\'\nUsage: clear [options]\nOptions:\n  -T TERM     use this instead of $TERM\n  -V          print curses-version\n  -x          do not try to clear scrollback';
             }
             clearOutput();
             return '';
+        }
 
-        case 'help':
+        case 'mv': {
+            let force = false;
+            let interactive = false;
+            let noClobber = false;
+            let verbose = false;
+            const mvArgs = [];
+
+            for (let i = 0; i < args.length; ++i) {
+                const arg = args[i];
+                if (arg === '--help') {
+                    return getCommandHelp('mv');
+                }
+                if (arg === '--') {
+                    for (let j = i + 1; j < args.length; j++) mvArgs.push(args[j]);
+                    break;
+                }
+                if (arg.startsWith('-') && arg !== '-') {
+                    const flags = arg.slice(1).split('');
+                    for (const flag of flags) {
+                        if (flag === 'f') force = true;
+                        else if (flag === 'i') interactive = true;
+                        else if (flag === 'n') noClobber = true;
+                        else if (flag === 'v') verbose = true;
+                        else return 'mv: invalid option -- \'' + flag + '\'\nTry \'mv --help\' for more information.';
+                    }
+                }
+                else {
+                    mvArgs.push(arg);
+                }
+            }
+
+            if (mvArgs.length === 0) {
+                return 'mv: missing file operand\nTry \'mv --help\' for more information.';
+            }
+            if (mvArgs.length === 1) {
+                return 'mv: missing destination file operand after \'' + mvArgs[0] + '\'\nTry \'mv --help\' for more information.';
+            }
+
+            const dest = mvArgs[mvArgs.length - 1];
+            const sources = mvArgs.slice(0, -1);
+            const mvResults = [];
+
+            for (const src of sources) {
+                const result = fs.move(src, dest, noClobber);
+                if (result.error) {
+                    mvResults.push(result.error);
+                }
+                else if (verbose && !result.skipped) {
+                    mvResults.push("'" + src + "' -> '" + dest + "'");
+
+                }
+            }
+            return mvResults.join('\n');
+        }
+
+        case 'help': {
             if (args.length === 0) return getHelpSummary();
             if (args[0] === '--help') return getHelpUsage();
             return getCommandHelp(args[0]);
+        }
 
-        default:
+        default: {
             return 'bash: ' + cmd + ': command not found';
+        }
     }
 }
 
@@ -335,11 +482,17 @@ function getCommandHelp(name) {
         case 'touch':
             return 'touch: touch [OPTION]... FILE...\n    Update file timestamps.\n\n    Options:\n      -c  do not create any files';
         case 'echo':
-            return 'echo: echo [-neE] [arg ...]\n    Write arguments to the stadart output.\n\n    Options:\n    -n do not output the trailing newline\n    -e enabel interpretation of backslash escapes\n    -E diable interpretation of backslash escapes (default)';
+            return 'echo: echo [-neE] [arg ...]\n    Write arguments to the standard output.\n\n    Options:\n      -n  do not output the trailing newline\n      -e  enable interpretation of backslash escapes\n      -E  disable interpretation of backslash escapes (default)';
+        case 'cat':
+            return 'cat: cat [OPTION]... [FILE]...\n    Concatenate FILE(s) to standard output.\n\n    Options:\n      -n, --number           number all output lines\n      -b, --number-nonblank  number nonempty output lines\n      -s, --squeeze-blank    suppress repeated empty output lines\n      -E, --show-ends        display $ at end of each line\n      -T, --show-tabs        display TAB characters as ^I';
+        case 'rm':
+            return 'rm: rm [OPTION]... [FILE]...\n    Remove (unlink) the FILE(s).\n\n    Options:\n      -f, --force           ignore nonexistent files\n      -i                    prompt before every removal\n      -r, -R, --recursive   remove directories and their contents\n      -v, --verbose         explain what is being done';
         case 'clear':
             return 'clear: clear [options]\n    Clear the terminal screen.\n\n    Options:\n      -V  print curses-version\n      -x  do not try to clear scrollback';
-        case 'cat':
-            return 'cat: cat [OPTION]... [FILE]...\n     Concatenate FILE(s) to stadartd output.\n\n    Options:\n    -n, --number        number all output lines\n    -b, --number-nonblank number nonempty output lines\n    -s, --squeeze-blank suppress repeated empty output lines\n    -E, --show-ends    display $ at end of each line\n    -T, --show-tabs    display TAB characters as ^I';
+        case 'cp':
+            return 'cp: cp [OPTION]... SOURCE... DIRECTORY\n    Copy SOURCE to DEST.\n\n    Options:\n      -r, -R, --recursive   copy directories recursively\n      -f, --force           force overwrite\n      -i, --interactive     prompt before overwrite\n      -n, --no-clobber      do not overwrite an existing file\n      -v, --verbose         explain what is being done';
+        case 'mv':
+            return 'mv: mv [OPTION]... SOURCE... DIRECTORY\n    Rename SOURCE to DEST, or move SOURCE(s) to DIRECTORY.\n\n    Options:\n      -f, --force           do not prompt before overwriting\n      -i, --interactive     prompt before overwrite\n      -n, --no-clobber      do not overwrite an existing file\n      -v, --verbose         explain what is being done';
         default:
             return 'help: no help topics match \'' + name + '\'.  Try \'help help\' or \'man -k ' + name + '\'.';
     }
@@ -347,15 +500,18 @@ function getCommandHelp(name) {
 
 function getHelpSummary() {
     return 'Available commands\n' +
-        '  cd:       Change the shell working directory\n' +
-        '  clear:       Clear the terminal screen\n' +
-        '  help:       Display helpful information\n' +
-        '  ls:       List directory contents\n' +
-        '  mkdir:       Create directories\n' +
-        '  pwd:      Print the current working directory\n' +
-        '  touch:      Create empty files\n' +
+        '  cat:       Concatenate files and print\n' +
+        '  cd:        Change the shell working directory\n' +
+        '  clear:     Clear the terminal screen\n' +
         '  echo:      Display a line of text\n' +
-        '  cat:      Concatenate files and print\n';
+        '  help:      Display helpful information\n' +
+        '  ls:        List directory contents\n' +
+        '  mkdir:     Create directories\n' +
+        '  pwd:       Print the current working directory\n' +
+        '  rm:        Remove files or directories\n' +
+        '  touch:     Create empty files\n' +
+        '  cp:        Copy files and directories\n' +
+        '  mv:        Move or rename files\n';
 }
 
 function getHelpUsage() {

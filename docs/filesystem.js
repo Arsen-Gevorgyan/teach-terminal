@@ -146,6 +146,14 @@ class file {
         const type = this.#isDirectory ? 'd' : '-';
         return type + map(this.#permOwner) + map(this.#permGroup) + map(this.#permOther);
     }
+
+    removeChild(name) {
+        if (!this.#isDirectory) {
+            return false;
+        }
+        return this.#content.delete(name);
+    }
+
 }
 
 class FileSystem {
@@ -326,6 +334,7 @@ class FileSystem {
         return (size / (1024 * 1024)).toFixed(1) + 'M';
     }
 
+    
     cd(path) {
         if (!path || path === '~') {
             this.#cwd = this.#findHome();
@@ -343,6 +352,7 @@ class FileSystem {
             return null;
         }
 
+
         const target = this.#resolvePath(path);
         if (target === null) {
             return `cd: ${path}: No such file or directory`;
@@ -352,6 +362,110 @@ class FileSystem {
         }
         this.#cwd = target;
         return null;
+    }
+
+    move(srcPath, destPath, noClobber = false) {
+        const src = this.#resolvePath(srcPath);
+        if (!src) {
+            return { error: `mv: cannot stat '${srcPath}': No such file or directory` };
+        }
+
+
+
+
+        let destParent, destName;
+        const destTarget = this.#resolvePath(destPath);
+
+
+        if (destTarget && destTarget.isDirectory) {
+            destParent = destTarget;
+            destName = src.fileName;
+        } 
+        
+        
+        else {
+            const parts = destPath.split('/');
+            destName = parts[parts.length - 1];
+            const parentPath = parts.slice(0, -1).join('/') || '.';
+            destParent = parentPath === '.' ? this.#cwd : this.#resolvePath(parentPath);
+            
+            
+            if (!destParent) {
+                return { error: `mv: cannot move '${srcPath}' to '${destPath}': No such file or directory` };
+            }
+        }
+
+
+        const existing = destParent.getChild(destName);
+        if (existing) {
+            if (noClobber) {
+                return { success: true, skipped: true };
+            }
+            destParent.removeChild(destName);
+        }
+
+        src.parent.removeChild(src.fileName);
+
+        src.path = destParent.getAbsolutePath() + '/' + destName;
+        destParent.addChild(src);
+
+        return { success: true, src, destName };
+    }
+
+    copy(srcPath, destPath, recursive = false, noClobber = false) {
+        const src = this.#resolvePath(srcPath);
+        if (!src) {
+            return { error: `cp: cannot stat '${srcPath}': No such file or directory` };
+        }
+        if (src.isDirectory && !recursive) {
+            return { error: `cp: -r not specified; omitting directory '${srcPath}'` };
+        }
+
+        let destParent, destName;
+        const destTarget = this.#resolvePath(destPath);
+
+        if (destTarget && destTarget.isDirectory) {
+            destParent = destTarget;
+            destName = src.fileName;
+        } else {
+            const parts = destPath.split('/');
+            destName = parts[parts.length - 1];
+            const parentPath = parts.slice(0, -1).join('/') || '.';
+            destParent = parentPath === '.' ? this.#cwd : this.#resolvePath(parentPath);
+            if (!destParent) {
+                return { error: `cp: cannot create regular file '${destPath}': No such file or directory` };
+            }
+        }
+
+        const existing = destParent.getChild(destName);
+        if (existing && noClobber) {
+            return { success: true, skipped: true };
+        }
+
+        if (existing) {
+            destParent.removeChild(destName);
+        }
+
+        const copy = this.#deepCopy(src, destParent.getAbsolutePath() + '/' + destName, destParent);
+        destParent.addChild(copy);
+        return { success: true, src, destName };
+    }
+
+    #deepCopy(src, newPath, newParent) {
+        if (src.isDirectory) {
+            const folder = new file(true, src.permOwner, src.permGroup, src.permOther, newPath, src.ownerName, src.groupName);
+            for (const child of src.getChildren()) {
+                const childCopy = this.#deepCopy(child, newPath + '/' + child.fileName, folder);
+                folder.addChild(childCopy);
+            }
+            return folder;
+        }
+        else {
+            const copy = new file(false, src.permOwner, src.permGroup, src.permOther, newPath, src.ownerName, src.groupName);
+            copy.content = src.content;
+            copy.size = src.content.length;
+            return copy;
+        }
     }
 
     #resolvePath(path) {
@@ -445,6 +559,18 @@ class FileSystem {
         }
 
         return null;
+    }
+
+    remove(name, recursive = false) {
+        const target = this.#cwd.getChild(name);
+        if (!target) {
+            return { error: `rm: cannot remove '${name}': No such file or directory` };
+        }
+        if (target.isDirectory && !recursive) {
+            return { error: `rm: cannot remove '${name}': Is a directory` };
+        }
+        target.parent.removeChild(target.fileName);
+        return { success: true };
     }
 
     touch(name, noCreate = false) {
