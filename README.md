@@ -67,7 +67,6 @@
 ### Why Command Limits?
 Each mission has a maximum number of allowed commands. If the user exceeds the limit by typing too many incorrect commands, the lecture restarts. This prevents random guessing and encourages users to read and understand the material before typing.
 
-
 ## How I Built This
 I started with a simple page with buttons. I didn't know much HTML or CSS, so most of the early work was learning the basics - how to center things on screen, how `overflow: hidden` prevents scrollbars, how `display: flex` and `display: grid` work, and how to make things responsive on phones without breaking the desktop layout.
 
@@ -77,13 +76,30 @@ The filesystem was the biggest challenge. I learned about classes and how they w
 
 After I learned about linked lists, I realized I could use the same idea to find a file's absolute path. In a linked list you move from one node to the next using a pointer. In my filesystem, I move from one folder to its parent using the **parent** reference, building the path as I go up. I also worked on moving to the parent folder using `..` and staying in the same folder using `.`.
 
-How I Used AI
+## How I Used AI
 On my project's journey, I used a few AI tools.
 
 First, I used ChatGPT. I completed a course about prompt techniques and used it to describe my tasks and a dynamic project plan that would change a lot along the way. I asked ChatGPT to write a prompt that I could paste into DeepSeek - a prompt that would make DeepSeek give me hints and directions instead of full code. I wanted to solve each problem myself and send back my solution to be checked. Then I would fix the issues and move step by step.
 
-I wrote many different versions of the code. Early on, I wanted the input line fixed at the bottom like a chat app. Then I realized that's not how real terminals work - the output flows and the prompt follows it. I rewrote the display logic twice.
+The AI never wrote the project for me. It pointed at problems and explained concepts. Every function you see here, I typed. Every bug I debugged by running the code and reading the errors.
 
-I also started with a login form embedded in the terminal, then switched to a separate `login.html` page with themed backgrounds. That meant rewriting the login flow from scratch.
+## Mistakes I Made
+Real projects have real bugs. Here are some of the ones I hit:
+
+- I typed `procesCommand` instead of `processCommand` and spent a long time trying to figure out why nothing worked.
+- I wrote `const result = []` in two different places inside a switch and got a "cannot redeclare" error. I didn't know that `let` and `const` share scope in switch cases.
+- My `move` function had a bug where moving a file into a folder returned `undefined` because one code branch didn't return anything. The terminal crashed with "Cannot read properties of undefined".
+- I used `Math.cail` instead of `Math.ceil` and the terminal kept crashing every time I ran `ls -l`.
+- I spelled `hummanReadable` wrong in six places and had to fix each one.
+- I deleted a closing `}` in the `ls` case and the whole function stopped working. I found it after staring at the code for a long time.
+- I once reverted to an older version of `filesystem.js` without realizing it and lost my colored `ls` output. I had to redo it.
+- I tried to add redirection (`>`, `>>`) but didn't understand how the terminal's `return` flow worked. I had to rethink it before writing anything.
+
+These are the kinds of mistakes that don't show up in generated code.
+
+## What I'd Do Differently
+- Write cleaner git commits from the start (mine are messy)
+- Test on mobile earlier - I built a lot before realizing the terminal didn't fit on a phone
+- Keep better notes on what I changed each day
 
 ## Try it - [Demo](https://arsen-gevorgyan.github.io/teach-terminal/)

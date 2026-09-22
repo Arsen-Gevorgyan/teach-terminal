@@ -4,6 +4,81 @@ var loginMachine = localStorage.getItem('loginMachine') || 'linux';
 window.fs = new FileSystem(loginUser, loginMachine);
 
 function processCommand(input) {
+    input = input.trim();
+    if (input === '') return '';
+
+    let stdoutRedirect = null;
+    let stderrRedirect = null;
+    let stdinFile = null;
+
+
+    const stderrMatch = input.match(/^(.*?)\s+2(>>?)\s+(\S+)\s*$/);
+    if (stderrMatch) {
+
+        input = stderrMatch[1].trim();
+        stderrRedirect = { type: stderrMatch[2], file: stderrMatch[3] };
+    }
+
+
+    const stdinMatch = input.match(/^(.*?)\s+<\s+(\S+)\s*$/);
+    if (stdinMatch) {
+
+        input = stdinMatch[1].trim();
+
+        stdinFile = stdinMatch[2];
+    }
+
+
+    const stdoutMatch = input.match(/^(.*?)\s+(>>?)\s+(\S+)\s*$/);
+
+    if (stdoutMatch) {
+
+        input = stdoutMatch[1].trim();
+        stdoutRedirect = { type: stdoutMatch[2], file: stdoutMatch[3] };
+    }
+
+
+
+
+    let stdinContent = null;
+
+    if (stdinFile) {
+
+        const readResult = fs.readFile(stdinFile);
+
+        if (readResult.error) {
+
+            return 'bash: ' + stdinFile + ': No such file or directory';
+        }
+
+        stdinContent = readResult.content;
+    }
+
+
+    let result = executeCommand(input, stdinContent);
+
+
+
+    const isError = result && /^(bash|cat|ls|rm|cp|mv|mkdir|touch|cd|pwd|echo|help|grep|head|tail):/.test(result);
+
+
+
+    if (stderrRedirect && isError) {
+        const writeResult = fs.writeFile(stderrRedirect.file, result, stderrRedirect.type === '>>');
+        if (writeResult.error) return writeResult.error;
+        return '';
+    }
+
+    if (stdoutRedirect && !isError) {
+        const writeResult = fs.writeFile(stdoutRedirect.file, result, stdoutRedirect.type === '>>');
+        if (writeResult.error) return writeResult.error;
+        return '';
+    }
+
+    return result;
+}
+
+function executeCommand(input, stdinContent = null) {
     const parts = input.trim().split(/\s+/);
     const cmd = parts[0].toLowerCase();
     const args = parts.slice(1);
@@ -33,7 +108,7 @@ function processCommand(input) {
             return fs.pwd();
         }
 
-        
+
         case 'ls': {
             let showAll = false;
             let showAlmostAll = false;
@@ -235,19 +310,28 @@ function processCommand(input) {
             }
 
             if (catFiles.length === 0) {
-                return 'cat: missing operand\nTry \'cat --help\' for more information.';
+                if (stdinContent !== null) {
+                    catFiles.push('__stdin__');
+                } else {
+                    return 'cat: missing operand\nTry \'cat --help\' for more information.';
+                }
             }
 
             const catResults = [];
             let lineNumber = 1;
 
             for (const file of catFiles) {
-                const result = fs.readFile(file);
-                if (result.error) {
-                    catResults.push(result.error);
-                    continue;
+                let content;
+                if (file === '__stdin__') {
+                    content = stdinContent;
+                } else {
+                    const result = fs.readFile(file);
+                    if (result.error) {
+                        catResults.push(result.error);
+                        continue;
+                    }
+                    content = result.content || '';
                 }
-                let content = result.content || '';
                 if (content === '') continue;
 
                 let lines = content.split('\n');

@@ -334,7 +334,7 @@ class FileSystem {
         return (size / (1024 * 1024)).toFixed(1) + 'M';
     }
 
-    
+
     cd(path) {
         if (!path || path === '~') {
             this.#cwd = this.#findHome();
@@ -410,6 +410,29 @@ class FileSystem {
         destParent.addChild(src);
 
         return { success: true, src, destName };
+    }
+
+
+    writeFile(name, content, append = false) {
+        let target = this.#cwd.getChild(name);
+
+        if (target && target.isDirectory) {
+            return { error: `bash: ${name}: Is a directory`};
+        }
+        if (!target){
+            target = new file(false, 6, 4, 4, this.#cwd.getAbsolutePath() + '/' + name, this.#username, this.#username);
+            this.#cwd.addChild(target);
+        }
+
+        if (append){
+            target.content = target.content + content;
+        }
+        else {
+            target.content = content;
+        }
+        target.size = target.content.length;
+
+        return { success: true};
     }
 
     copy(srcPath, destPath, recursive = false, noClobber = false) {
