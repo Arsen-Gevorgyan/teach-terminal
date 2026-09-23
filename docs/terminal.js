@@ -4,9 +4,91 @@ const terminal = document.getElementById('terminal');
 const outputArea = document.getElementById('output-area');
 const inputLine = document.getElementById('input-line');
 const promptSpan = document.querySelector('.prompt');
+const commandHistory = [];
+let historyIndex = -1;
+let currentIndex = '';
+
+let cursorPos = 0;
+
 
 var loginUser = localStorage.getItem('loginUser') || 'student';
 var loginMachine = localStorage.getItem('loginMachine') || 'linux';
+
+hiddenInput.addEventListener('keydown', (event) => {
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'Home' || event.key === 'End') {
+        setTimeout(() => {
+            cursorPos = hiddenInput.selectionStart;
+            renderInput();
+        }, 0);
+    }
+
+    if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (commandHistory.length === 0) return;
+
+        if (historyIndex === -1) {
+            currentIndex = hiddenInput.value;
+            historyIndex = commandHistory.length - 1;
+        } else if (historyIndex > 0) {
+            historyIndex--;
+        }
+
+        hiddenInput.value = commandHistory[historyIndex];
+        cursorPos = hiddenInput.value.length;
+        renderInput();
+        return;
+    }
+
+    if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (historyIndex === -1) return;
+
+        historyIndex++;
+        if (historyIndex >= commandHistory.length) {
+            historyIndex = -1;
+            hiddenInput.value = currentIndex;
+        } else {
+            hiddenInput.value = commandHistory[historyIndex];
+        }
+        cursorPos = hiddenInput.value.length;
+        renderInput();
+        return;
+    }
+
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const command = hiddenInput.value.trim();
+        const fullCommand = hiddenInput.value;
+
+        if (fullCommand.trim() !== '') {
+            commandHistory.push(fullCommand);
+        }
+        historyIndex = -1;
+        currentIndex = '';
+
+        const commandLine = document.createElement('div');
+        commandLine.innerHTML = '<span class="prompt">' + promptSpan.textContent + '</span><span class="command-text">' + fullCommand + '</span>';
+        outputArea.insertBefore(commandLine, inputLine);
+
+        if (command) {
+            const result = processCommand(command);
+            if (result !== null && result !== undefined && result !== '') {
+                const outputLine = document.createElement('div');
+                outputLine.innerHTML = result.replace(/\n/g, '<br>');
+                outputArea.insertBefore(outputLine, inputLine);
+            }
+            updatePrompt();
+        }
+
+        hiddenInput.value = '';
+        cursorPos = 0;
+        inputText.textContent = '';
+        renderInput();
+        trimLines();
+        setTimeout(scrollToBottom, 10);
+    }
+});
 
 function updatePrompt() {
     const cwdPath = fs.pwd();
@@ -33,6 +115,7 @@ terminal.addEventListener('click', () => {
 });
 
 hiddenInput.focus();
+renderInput();
 
 hiddenInput.addEventListener('input', () => {
     let text = hiddenInput.value;
@@ -40,49 +123,58 @@ hiddenInput.addEventListener('input', () => {
         text = text.slice(0, 100);
         hiddenInput.value = text;
     }
+    cursorPos = hiddenInput.selectionStart;
+    renderInput();
+
+    
+    // const parts = text.split(/\s+/);
+    // if (parts.length > 0 && parts[0]) {
+    //     if (isValidCommand(parts[0])) {
+    //         const coloredCommand = '<span class="valid-command">' + parts[0] + '</span>';
+    //         const rest = text.slice(parts[0].length);
+    //         inputText.innerHTML = coloredCommand + rest;
+    //     } else {
+    //         inputText.textContent = text;
+    //     }
+    // } else {
+    //     inputText.textContent = '';
+    // }
+
+
+});
+
+function renderInput() {
+    const text = hiddenInput.value;
+    const before = text.slice(0, cursorPos);
+    const after = text.slice(cursorPos);
+
 
     const parts = text.split(/\s+/);
-    if (parts.length > 0 && parts[0]) {
-        if (isValidCommand(parts[0])) {
-            const coloredCommand = '<span class="valid-command">' + parts[0] + '</span>';
-            const rest = text.slice(parts[0].length);
-            inputText.innerHTML = coloredCommand + rest;
+
+    const isFirstWorldValid = parts.length > 0 && parts[0] && isValidCommand(parts[0]);
+
+    if (isFirstWorldValid) {
+        const cmdEnd = parts[0].length;
+
+        if (cursorPos <= cmdEnd) {
+            const beforeCmd = before;
+            const afterCmd = text.slice(cursorPos, cmdEnd);
+            const rest = text.slice(cmdEnd);
+
+            inputText.innerHTML = '<span class="valid-command">' + beforeCmd + '<span class="cursor">█</span>' + afterCmd + '</span>' + rest;
         }
+
         else {
-            inputText.textContent = text;
+            const beforeText = text.slice(0, cursorPos);
+
+            const afterText = text.slice(cursorPos);
+            inputText.innerHTML = '<span class="valid-command">' + parts[0] + '</span>' + beforeText.slice(cmdEnd) + '<span class="cursor">█</span>' + afterText;
         }
     }
     else {
-        inputText.textContent = '';
+        inputText.innerHTML = before + '<span class="cursor">█</span>' + after;
     }
-});
-
-hiddenInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        const command = hiddenInput.value.trim();
-        const fullCommand = hiddenInput.value;
-
-        const commandLine = document.createElement('div');
-        commandLine.innerHTML = '<span class="prompt">' + promptSpan.textContent + '</span><span class="command-text">' + fullCommand + '</span>';
-        outputArea.insertBefore(commandLine, inputLine);
-
-        if (command) {
-            const result = processCommand(command);
-            if (result !== null && result !== undefined) {
-                const outputLine = document.createElement('div');
-                outputLine.innerHTML = result.replace(/\n/g, '<br>');
-                outputArea.insertBefore(outputLine, inputLine);
-            }
-            updatePrompt();
-        }
-
-        hiddenInput.value = '';
-        inputText.textContent = '';
-        trimLines();
-        setTimeout(scrollToBottom, 10);
-    }
-});
+}
 
 function trimLines() {
     const style = getComputedStyle(outputArea);
@@ -103,6 +195,6 @@ function scrollToBottom() {
 }
 
 function isValidCommand(word) {
-    const validCommands = ['pwd', 'ls', 'cd', 'mkdir', 'touch', 'clear', 'help'];
+    const validCommands = ['pwd', 'ls', 'cd', 'mkdir', 'touch', 'echo', 'cat', 'rm', 'cp', 'mv', 'clear', 'help'];
     return validCommands.includes(word.toLowerCase());
 }
