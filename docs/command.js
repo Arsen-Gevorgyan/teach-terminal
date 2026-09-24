@@ -204,6 +204,21 @@ function executeCommand(input, stdinContent = null) {
             return mkdirResults.join('\n');
         }
 
+        case 'history': {
+            
+            if (window.commandHistory.length === 0) {
+                return '';
+            }
+
+            const lines = window.commandHistory.map((cmd, i) => {
+                const num = String(i + 1).padStart(5, ' ');
+                return num + '  ' + cmd;
+            });
+
+
+            return lines.join('\n');
+        }
+
         case 'touch': {
             let noCreate = false;
             const files = [];
@@ -577,6 +592,8 @@ function getCommandHelp(name) {
             return 'cp: cp [OPTION]... SOURCE... DIRECTORY\n    Copy SOURCE to DEST.\n\n    Options:\n      -r, -R, --recursive   copy directories recursively\n      -f, --force           force overwrite\n      -i, --interactive     prompt before overwrite\n      -n, --no-clobber      do not overwrite an existing file\n      -v, --verbose         explain what is being done';
         case 'mv':
             return 'mv: mv [OPTION]... SOURCE... DIRECTORY\n    Rename SOURCE to DEST, or move SOURCE(s) to DIRECTORY.\n\n    Options:\n      -f, --force           do not prompt before overwriting\n      -i, --interactive     prompt before overwrite\n      -n, --no-clobber      do not overwrite an existing file\n      -v, --verbose         explain what is being done';
+        case 'history':
+            return 'history: history\n    Display the command history list with line numbers.';
         default:
             return 'help: no help topics match \'' + name + '\'.  Try \'help help\' or \'man -k ' + name + '\'.';
     }
@@ -595,7 +612,8 @@ function getHelpSummary() {
         '  rm:        Remove files or directories\n' +
         '  touch:     Create empty files\n' +
         '  cp:        Copy files and directories\n' +
-        '  mv:        Move or rename files\n';
+        '  mv:        Move or rename files\n' +
+        '  history:   Display command history\n';
 }
 
 function getHelpUsage() {

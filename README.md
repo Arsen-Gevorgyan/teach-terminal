@@ -30,23 +30,20 @@
 * `cp` | `-r`, `-i`, `-v`
 * `mv` | `-i`, `-v`
 
-## Tasks
-
-### Search & Text
-- `grep` with `-i`, `-n`, `-c`, `-v`, `-r`
-- `head` with `-n`
-- `tail` with `-n`
-
 ### Redirections
 - `>` - write (truncate)
 - `>>` - append
 - `<` - read from file
 - `2>` - redirect stderr
 
+## Tasks
+
+
+
 ### Shel Features
 - Command history (up/down arrows)
 - Tab autocomplete
-- `history` command, `!!`, `!n`
+
 
 ### Permissions
 - `chmod` (numeric and symbolic)
