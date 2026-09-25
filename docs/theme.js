@@ -38,7 +38,7 @@
             '--border-color': '#4a6c8f',
             '--login-bg': 'radial-gradient(circle, rgba(20, 161, 255, 1) 0%, rgb(0, 52, 66) 100%)',
             '--command-text': '#ffaa00',
-            '--dir-color': '#564c9c',
+            '--dir-color': '#9705c0',
             '--file-color': '#ffffff',
             '--exec-color': '#ff4444'
         }

@@ -38,17 +38,9 @@ h1 {
 }
 
 @keyframes gradientShift {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 button {
@@ -88,6 +80,7 @@ button:active {
     background: var(--bg-color);
 }
 
+
 .terminal-window {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
@@ -104,6 +97,7 @@ hr {
     height: 10px;
     border: none;
 }
+
 
 .card-container {
     display: flex;
@@ -157,17 +151,9 @@ hr {
 }
 
 @keyframes borderGlow {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .theme-preview {
@@ -205,6 +191,7 @@ hr {
     transform: none;
     box-shadow: none;
 }
+
 
 #terminal {
     width: 100vw;
@@ -270,15 +257,8 @@ hr {
 }
 
 @keyframes blink {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }
 
 #hidden-input {
@@ -301,17 +281,10 @@ body.terminal-page {
     color: var(--text-color);
 }
 
-.dir-color {
-    color: var(--dir-color);
-}
+.dir-color { color: var(--dir-color); }
+.file-color { color: var(--file-color); }
+.exec-color { color: var(--exec-color); }
 
-.file-color {
-    color: var(--file-color);
-}
-
-.exec-color {
-    color: var(--exec-color);
-}
 
 .mode-page {
     display: grid;
@@ -361,7 +334,6 @@ body.terminal-page {
 .mode-card:hover {
     transform: translateY(-5px);
     border-color: var(--accent-color);
-
 }
 
 .mode-card h2 {
@@ -415,42 +387,104 @@ body.terminal-page {
     font-size: 1rem;
 }
 
-.mode-back:hover{
+.mode-back:hover {
     color: var(--accent-color);
 }
 
-.lessons-page {
-    display: block;
+
+body.lessons-page {
     overflow-y: auto;
+    height: auto;
     min-height: 100vh;
+    display: block;
+    padding: 0;
+    margin: 0;
     background: var(--bg-color);
     color: var(--text-color);
-    font-family: monospace;
-    padding: 40px 20px;
 }
 
 .lessons-container {
-    max-width: 600px;
+    max-width: 900px;
     margin: 0 auto;
-    text-align: center;
+    padding: 40px 20px;
 }
 
 .lessons-container h1 {
-    font-size: 2rem;
-    margin-bottom: 10px;
+    font-size: 2.2rem;
+    margin-bottom: 12px;
+    text-align: center;
 }
 
 .lessons-subtitle {
-    color:#aaaaaa;
+    color: #aaaaaa;
+    font-size: 1.2rem;
     margin-bottom: 40px;
+    text-align: center;
 }
 
 .timeline {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
     margin-bottom: 40px;
-    text-align: left;
+}
+
+.section {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px 20px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+    transition: background 0.2s;
+    position: relative;
+}
+
+.section-header:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.section-arrow {
+    display: inline-block;
+    transition: transform 0.2s;
+    font-size: 0.8rem;
+}
+
+.section.collapsed .section-arrow {
+    transform: rotate(-90deg);
+}
+
+.section-progress {
+    position: absolute;
+    right: 20px;
+    color: #aaaaaa;
+    font-size: 0.9rem;
+}
+
+.lesson-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 16px 20px 20px 20px;
+}
+
+.section.collapsed .lesson-grid {
+    display: none;
 }
 
 .lesson-card {
@@ -463,10 +497,11 @@ body.terminal-page {
     align-items: center;
     cursor: pointer;
     transition: transform 0.2s, border-color 0.2s;
+    text-align: left;
 }
 
 .lesson-card:hover {
-    transform: translateX(4px);
+    transform:scale(1.025);
     border-color: var(--accent-color);
 }
 
@@ -480,11 +515,15 @@ body.terminal-page {
     border-color: var(--border-color);
 }
 
-.lesson-card.completed .lesson-status{
+.lesson-card.done {
     border-color: var(--accent-color);
 }
 
-.lesson-card.locked .lesson-status{
+.lesson-card.done .lesson-status {
+    color: var(--accent-color);
+}
+
+.lesson-card.locked .lesson-status {
     color: #666666;
 }
 
@@ -500,15 +539,14 @@ body.terminal-page {
     letter-spacing: 1px;
 }
 
-.lesson-title{
+.lesson-title {
     font-size: 1.1rem;
     font-weight: bold;
 }
 
-.lesson-subtitle{
+.lesson-card-subtitle {
     font-size: 0.85rem;
     color: #aaaaaa;
-
 }
 
 .lesson-status {
@@ -523,6 +561,8 @@ body.terminal-page {
     color: #aaaaaa;
     text-decoration: none;
     font-size: 1rem;
+    display: block;
+    text-align: center;
 }
 
 .lessons-back:hover {
@@ -530,6 +570,28 @@ body.terminal-page {
 }
 
 
+@media (max-width: 700px) {
+    .lesson-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .lessons-container {
+        padding: 20px 12px;
+    }
+
+    .section-header {
+        padding: 14px 16px;
+    }
+
+    .section-title {
+        font-size: 1rem;
+    }
+
+    .section-progress {
+        right: 14px;
+        font-size: 0.8rem;
+    }
+}
 
 @media (max-width: 600px) {
     body {
