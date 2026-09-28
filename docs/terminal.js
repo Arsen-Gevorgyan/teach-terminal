@@ -116,6 +116,10 @@ hiddenInput.addEventListener('keydown', (event) => {
             updatePrompt();
         }
 
+        if (typeof checkPractice === 'function') {
+            checkPractice(command);
+        }
+
         hiddenInput.value = '';
         cursorPos = 0;
         inputText.textContent = '';

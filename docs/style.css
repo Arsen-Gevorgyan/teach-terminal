@@ -38,9 +38,17 @@ h1 {
 }
 
 @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 button {
@@ -151,9 +159,17 @@ hr {
 }
 
 @keyframes borderGlow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .theme-preview {
@@ -257,8 +273,15 @@ hr {
 }
 
 @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
 }
 
 #hidden-input {
@@ -281,12 +304,21 @@ body.terminal-page {
     color: var(--text-color);
 }
 
-.dir-color { color: var(--dir-color); }
-.file-color { color: var(--file-color); }
-.exec-color { color: var(--exec-color); }
+.dir-color {
+    color: var(--dir-color);
+}
+
+.file-color {
+    color: var(--file-color);
+}
+
+.exec-color {
+    color: var(--exec-color);
+}
 
 
 .mode-page {
+    overflow: scroll;
     display: grid;
     place-items: center;
     min-height: 100vh;
@@ -500,8 +532,148 @@ body.lessons-page {
     text-align: left;
 }
 
+.lesson-window {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 400px;
+    max-width: calc(100vw - 40px);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    font-family: monospace;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.lesson-window.hidden {
+    display: none;
+}
+
+.lesson-window-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.05);
+    border-bottom: 1px solid var(--border-color);
+    cursor: move;
+    user-select: none;
+}
+
+.lesson-window-title {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.lesson-window-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.lesson-window-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    font-family: monospace;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transform: none;
+    transition: background 0.15s;
+}
+
+.lesson-window-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: none;
+}
+
+.lesson-window-body {
+    padding: 16px 20px;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    text-align: left;
+}
+
+.lesson-window-body p {
+    margin-bottom: 10px;
+}
+
+.lesson-window-footer {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-top: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.lesson-nav-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    font-family: monospace;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transform: none;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.lesson-nav-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    transform: none;
+}
+
+.lesson-nav-btn.primary {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: var(--bg-color);
+}
+
+.lesson-nav-btn.primary:hover {
+    opacity: 0.85;
+    background: var(--accent-color);
+    transform: none;
+}
+
+.lesson-nav-btn.hidden {
+    visibility: hidden;
+}
+
+.lesson-window.practice-mode {
+    border-color: var(--command-text);
+    box-shadow: 0 20px 60px rgba(255, 170, 0, 0.2);
+}
+
+.lesson-window.practice-mode .lesson-window-title {
+    color: var(--command-text);
+}
+
+.lesson-window.practice-mode .lesson-window-title::before {
+    content: "PRACTICE: ";
+}
+
+.lesson-window.practice-mode .lesson-window-body {
+    background: rgba(255, 170, 0, 0.05);
+}
+
 .lesson-card:hover {
-    transform:scale(1.025);
+    transform: scale(1.025);
     border-color: var(--accent-color);
 }
 

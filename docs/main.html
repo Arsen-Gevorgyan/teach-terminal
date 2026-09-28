@@ -16,16 +16,32 @@
             <div id="input-line">
                 <span class="prompt"></span>
                 <span class="input-text"></span>
-                <!-- <span class="input-text"></span><span class="cursor">█</span> -->
             </div>
         </div>
-        <input type="text" id="hidden-input" autofocus>
+        <input type="text" id="hidden-input">
     </div>
 
-    <script src="theme.js"></script>
+    <div id="lesson-window" class="lesson-window hidden">
+        <div class="lesson-window-header" id="lesson-window-drag">
+            <span class="lesson-window-title" id="lesson-window-title">Lesson</span>
+            <div class="lesson-window-buttons">
+                <button class="lesson-window-btn" id="lesson-minimize">—</button>
+                <button class="lesson-window-btn" id="lesson-close">×</button>
+            </div>
+        </div>
+        <div class="lesson-window-body" id="lesson-window-body">
+        </div>
+        <div class="lesson-window-footer">
+            <button class="lesson-nav-btn" id="lesson-back">Back</button>
+            <button class="lesson-nav-btn primary" id="lesson-next">Next</button>
+        </div>
+    </div>
+
     <script src="filesystem.js"></script>
     <script src="command.js"></script>
     <script src="terminal.js"></script>
+    <script src="lessons-data.js"></script>
+    <script src="lesson-window.js"></script>
+    <script src="theme.js"></script>
 </body>
-
 </html>
