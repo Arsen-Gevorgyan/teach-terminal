@@ -1,5 +1,5 @@
-var ownerNames = ['root'];
-var groupNames = ['root', 'bin'];
+var ownerNames = ['root', 'student', 'admin'];
+var groupNames = ['root', 'bin', 'admins', 'users'];
 
 class file {
     #isDirectory;
@@ -380,16 +380,16 @@ class FileSystem {
         if (destTarget && destTarget.isDirectory) {
             destParent = destTarget;
             destName = src.fileName;
-        } 
-        
-        
+        }
+
+
         else {
             const parts = destPath.split('/');
             destName = parts[parts.length - 1];
             const parentPath = parts.slice(0, -1).join('/') || '.';
             destParent = parentPath === '.' ? this.#cwd : this.#resolvePath(parentPath);
-            
-            
+
+
             if (!destParent) {
                 return { error: `mv: cannot move '${srcPath}' to '${destPath}': No such file or directory` };
             }
@@ -417,14 +417,14 @@ class FileSystem {
         let target = this.#cwd.getChild(name);
 
         if (target && target.isDirectory) {
-            return { error: `bash: ${name}: Is a directory`};
+            return { error: `bash: ${name}: Is a directory` };
         }
-        if (!target){
+        if (!target) {
             target = new file(false, 6, 4, 4, this.#cwd.getAbsolutePath() + '/' + name, this.#username, this.#username);
             this.#cwd.addChild(target);
         }
 
-        if (append){
+        if (append) {
             target.content = target.content + content;
         }
         else {
@@ -432,7 +432,7 @@ class FileSystem {
         }
         target.size = target.content.length;
 
-        return { success: true};
+        return { success: true };
     }
 
     copy(srcPath, destPath, recursive = false, noClobber = false) {
@@ -593,6 +593,92 @@ class FileSystem {
             return { error: `rm: cannot remove '${name}': Is a directory` };
         }
         target.parent.removeChild(target.fileName);
+        return { success: true };
+    }
+
+    chmod(path, mode) {
+        const target = this.#resolvePath(path);
+        if (!target) {
+            return { error: `chmod: cannot access '${path}': No such file or directory` };
+        }
+
+        if (/^[0-7]{3}$/.test(mode)) {
+            const owner = parseInt(mode[0]);
+            const group = parseInt(mode[1]);
+            const others = parseInt(mode[2]);
+
+            target.permOwner = owner;
+            target.permGroup = group;
+            target.permOther = others;
+            return { success: true };
+        }
+
+        const match = mode.match(/^([ugoa]*)([+\-=])([rwx]+)$/);
+        if (!match) {
+            return { error: `chmod: invalid mode: '${mode}'` };
+        }
+
+        const who = match[1] || 'a';
+        const op = match[2];
+        const perms = match[3];
+
+        const applyTo = {
+            u: who.includes('u') || who === 'a' || who === '',
+            g: who.includes('g') || who === 'a' || who === '',
+            o: who.includes('o') || who === 'a' || who === ''
+        };
+
+        let bits = 0;
+        if (perms.includes('r')) bits += 4;
+        if (perms.includes('w')) bits += 2;
+        if (perms.includes('x')) bits += 1;
+
+        const applyOp = (current) => {
+            if (op === '+') return current | bits;
+            if (op === '-') return current & ~bits;
+            if (op === '=') return bits;
+            return current;
+        };
+
+        if (applyTo.u) target.permOwner = applyOp(target.permOwner);
+        if (applyTo.g) target.permGroup = applyOp(target.permGroup);
+        if (applyTo.o) target.permOther = applyOp(target.permOther);
+
+        return { success: true };
+    }
+    chown(path, ownerSpec) {
+        const target = this.#resolvePath(path);
+        if (!target) {
+            return { error: `chown: cannot access '${path}': No such file or directory` };
+        }
+
+        let owner = null;
+        let group = null;
+
+        if (ownerSpec.includes(':')) {
+            const parts = ownerSpec.split(':');
+            owner = parts[0] || null;
+            group = parts[1] || null;
+        }
+        else {
+            owner = ownerSpec;
+        }
+
+        if (owner !== null && !ownerNames.includes(owner)) {
+            return { error: `chown: invalid user: '${owner}'` };
+        }
+
+        if (group !== null && !groupNames.includes(group)) {
+            return { error: `chown: invalid group: '${group}'` };
+        }
+
+        if (owner !== null) {
+            target.ownerName = owner;
+        }
+        if (group !== null) {
+            target.groupName = group;
+        }
+
         return { success: true };
     }
 

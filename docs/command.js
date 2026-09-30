@@ -205,7 +205,7 @@ function executeCommand(input, stdinContent = null) {
         }
 
         case 'history': {
-            
+
             if (window.commandHistory.length === 0) {
                 return '';
             }
@@ -548,6 +548,116 @@ function executeCommand(input, stdinContent = null) {
             return mvResults.join('\n');
         }
 
+        case 'chmod': {
+            let recursive = false;
+            let verbose = false;
+            const chmodArgs = [];
+
+            for (let i = 0; i < args.length; i++) {
+                const arg = args[i];
+                if (arg === '--help') return getCommandHelp('chmod');
+                if (arg === '--') {
+                    for (let j = i + 1; j < args.length; j++) {
+                        chmodArgs.push(args[j]);
+                    }
+                    i = args.length;
+                }
+                else if (arg.startsWith('-') && arg !== '-') {
+                    const flags = arg.slice(1).split('');
+                    for (const flag of flags) {
+                        if (flag === 'R') recursive = true;
+                        else if (flag === 'v') verbose = true;
+                        else return 'chmod: invalid option -- \'' + flag + '\'\nTry \'chmod --help\' for more information.';
+                    }
+                }
+                else {
+                    chmodArgs.push(arg);
+                }
+            }
+
+            if (chmodArgs.length === 0) {
+                return 'chmod: missing operand\nTry \'chmod --help\' for more information.';
+            }
+            if (chmodArgs.length === 1) {
+                return 'chmod: missing operand after \'' + chmodArgs[0] + '\'\nTry \'chmod --help\' for more information.';
+            }
+
+            const mode = chmodArgs[0];
+            const targets = chmodArgs.slice(1);
+            const chmodResults = [];
+
+            for (const target of targets) {
+                const result = fs.chmod(target, mode);
+                if (result.error) {
+                    chmodResults.push(result.error);
+                }
+                else if (verbose) {
+                    chmodResults.push("mode of '" + target + "' changed");
+                }
+            }
+            return chmodResults.join('\n');
+        }
+
+
+        case 'chown': {
+            let recursive = false;
+            let verbose = false;
+            const chownArgs = [];
+
+            for (let i = 0; i < args.length; ++i) {
+                const arg = args[i];
+                if (arg === '--help') return getCommandHelp('chown');
+                if (arg === '--') {
+                    for (let j = i + 1; j < args.length; ++j) {
+                        chownArgs.push(args[j]);
+                    }
+                    i = args.length;
+                }
+                else if (arg.startsWith('-') && arg !== '-') {
+                    const flags = arg.slice(1).split('');
+                    for (const flag of flags) {
+                        if (flag === 'R') recursive = true;
+                        else if (flag === 'v') verbose = true;
+                        else return 'chown: invalid option -- \'' + flag + '\'\nTry \'chown --help\' for more information.';
+                    }
+                }
+                else {
+                    chownArgs.push(arg);
+
+                }
+            }
+
+            if (chownArgs.length === 0) {
+                return 'chown: missing operand\nTry \'chown --help\' for more information.';
+
+            }
+            if (chownArgs.length === 1) {
+                return 'chown: missing operand after \'' + chownArgs[0] + '\'\nTry \'chown --help\' for more information.';
+            }
+
+            const ownerSpec = chownArgs[0];
+            const targets = chownArgs.slice(1);
+            const chownResults = [];
+
+            if (ownerSpec === 'root' || ownerSpec.startsWith('root:')) {
+                if (!window.sudoActive) {
+                    return "chown: changing ownership of '" + targets[0] + "': Operation not permitted";
+                }
+            }
+            for (const target of targets) {
+                const result = fs.chown(target, ownerSpec);
+                if (result.error) {
+                    chownResults.push(result.error);
+                }
+
+                else if (verbose) {
+                    chownResults.push("changes ownership of '" + target + "'");
+                }
+
+            }
+            return chownResults.join('\n');
+        }
+
         case 'help': {
             if (args.length === 0) return getHelpSummary();
             if (args[0] === '--help') return getHelpUsage();
@@ -594,6 +704,12 @@ function getCommandHelp(name) {
             return 'mv: mv [OPTION]... SOURCE... DIRECTORY\n    Rename SOURCE to DEST, or move SOURCE(s) to DIRECTORY.\n\n    Options:\n      -f, --force           do not prompt before overwriting\n      -i, --interactive     prompt before overwrite\n      -n, --no-clobber      do not overwrite an existing file\n      -v, --verbose         explain what is being done';
         case 'history':
             return 'history: history\n    Display the command history list with line numbers.';
+        case 'chmod':
+            return 'chmod: chmod [OPTION]... MODE[,MODE]... FILE...\n    Change the mode of each FILE to MODE.\n\n    Numeric mode:\n      4 = read, 2 = write, 1 = execute\n      Add them for each group: owner, group, others\n      Example: chmod 755 file\n\n    Symbolic mode:\n      u = user, g = group, o = others, a = all\n      + = add, - = remove, = = set exactly\n      r = read, w = write, x = execute\n      Example: chmod +x file\n\n    Options:\n      -R  change files and directories recursively\n      -v  output a diagnostic for every file processed';
+        case 'chown':
+            return 'chown: chown [OPTION]... OWNER[:GROUP] FILE...\n    Change the owner and/or group of each FILE.\n\n    Examples:\n      chown student file.txt       change owner\n      chown student:admins file.txt  change owner and group\n      chown :admins file.txt       change group only\n\n    Options:\n      -R  operate on files and directories recursively\n      -v  output a diagnostic for every file processed';
+        case 'sudo':
+            return 'sudo: sudo [OPTION]... COMMAND\n    Execute a COMMAND as the superuser.\n\n    Example:\n      sudo chown root file.txt';
         default:
             return 'help: no help topics match \'' + name + '\'.  Try \'help help\' or \'man -k ' + name + '\'.';
     }
@@ -613,7 +729,10 @@ function getHelpSummary() {
         '  touch:     Create empty files\n' +
         '  cp:        Copy files and directories\n' +
         '  mv:        Move or rename files\n' +
-        '  history:   Display command history\n';
+        '  history:   Display command history\n' +
+        '  chmod:     Change file mode\n' +
+        '  chown:     Change file owner\n' +
+        '  sudo:      Execute a command as root\n';
 }
 
 function getHelpUsage() {

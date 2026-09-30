@@ -27,6 +27,7 @@ document.getElementById('login-form').addEventListener('submit', function(event)
     errorAll.textContent = '';
     localStorage.setItem('loginUser', username.toLowerCase());
     localStorage.setItem('loginMachine', machinename.toLowerCase());
+    localStorage.setItem('loginPassword', password);
     window.location.href = 'mode.html';
 });
 

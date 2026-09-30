@@ -7,6 +7,9 @@ const outputArea = document.getElementById('output-area');
 const inputLine = document.getElementById('input-line');
 const promptSpan = document.querySelector('.prompt');
 
+let awaitingPassword = false;
+let pendingCommand = null;
+
 const commandHistory = [];
 let historyIndex = -1;
 
@@ -20,6 +23,47 @@ window.commandHistory = commandHistory;
 
 
 hiddenInput.addEventListener('keydown', (event) => {
+
+    if (awaitingPassword) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+
+            const typedPassword = hiddenInput.value;
+            const correctPassword = localStorage.getItem('loginPassword') || '';
+
+            if (typedPassword === correctPassword) {
+                window.sudoActive = true;
+                const command = pendingCommand;
+                const result = processCommand(command);
+
+                if (result !== null && result !== undefined && result !== '') {
+                    const outputLine = document.createElement('div');
+                    outputLine.innerHTML = result.replace(/\n/g, '<br>');
+                    outputArea.insertBefore(outputLine, inputLine);
+                }
+
+                updatePrompt();
+                window.sudoActive = false;
+            }
+            else {
+                const errorLine = document.createElement('div');
+                errorLine.textContent = 'sudo: 1 incorrect password attempt';
+                outputArea.insertBefore(errorLine, inputLine);
+            }
+
+            awaitingPassword = false;
+            pendingCommand = null;
+            hiddenInput.value = '';
+            cursorPos = 0;
+            inputText.textContent = '';
+            renderInput();
+            trimLines();
+            scrollToBottom();
+            return;
+        }
+
+        return;
+    }
 
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.key === 'Home' || event.key === 'End') {
         setTimeout(() => {
@@ -78,13 +122,71 @@ hiddenInput.addEventListener('keydown', (event) => {
         let fullCommand = hiddenInput.value;
         let command = fullCommand.trim();
 
-        // expand !! and !n
-        if (command === '!!') {
+
+        if (command.startsWith('sudo ')) {
+            const username = localStorage.getItem('loginUser') || 'student';
+            pendingCommand = command.slice(5).trim();
+            awaitingPassword = true;
+
+            const commandLine = document.createElement('div');
+            commandLine.innerHTML = '<span class="prompt">' + promptSpan.textContent + '</span><span class="command-text">' + fullCommand + '</span>';
+            outputArea.insertBefore(commandLine, inputLine);
+
+            const passwordLine = document.createElement('div');
+            passwordLine.textContent = '[sudo] password for ' + username + ': ';
+            outputArea.insertBefore(passwordLine, inputLine);
+
+            if (fullCommand.trim() !== '') {
+                commandHistory.push(fullCommand);
+            }
+
+
+
+            historyIndex = -1;
+            currentIndex = '';
+
+            hiddenInput.value = '';
+            cursorPos = 0;
+            inputText.textContent = '';
+            renderInput();
+            trimLines();
+            scrollToBottom();
+            return;
+        }
+
+        else if (command === 'sudo') {
+            const commandLine = document.createElement('div');
+            commandLine.innerHTML = '<span class="prompt">' + promptSpan.textContent + '</span><span class="command-text">' + fullCommand + '</span>';
+            outputArea.insertBefore(commandLine, inputLine);
+
+            const errorLine = document.createElement('div');
+            errorLine.textContent = 'usage: sudo -h | -K | -k | -V';
+            outputArea.insertBefore(errorLine, inputLine);
+
+            if (fullCommand.trim() !== '') {
+                commandHistory.push(fullCommand);
+            }
+
+            historyIndex = -1;
+            currentIndex = '';
+            
+
+            hiddenInput.value = '';
+            cursorPos = 0;
+            inputText.textContent = '';
+            renderInput();
+            trimLines();
+            scrollToBottom();
+            return;
+        }
+
+        else if (command === '!!') {
             if (commandHistory.length > 0) {
                 fullCommand = commandHistory[commandHistory.length - 1];
                 command = fullCommand.trim();
             }
         }
+
         else if (/^!\d+$/.test(command)) {
             const n = parseInt(command.slice(1));
             if (n > 0 && n <= commandHistory.length) {
@@ -123,11 +225,16 @@ hiddenInput.addEventListener('keydown', (event) => {
         hiddenInput.value = '';
         cursorPos = 0;
         inputText.textContent = '';
-
         renderInput();
         trimLines();
-        setTimeout(scrollToBottom, 10);
+        scrollToBottom();
+        return;
     }
+
+    renderInput();
+    trimLines();
+    setTimeout(scrollToBottom, 10);
+
 });
 
 function updatePrompt() {
@@ -169,7 +276,13 @@ hiddenInput.addEventListener('input', () => {
     }
 
     cursorPos = hiddenInput.selectionStart;
-    renderInput();
+
+    if (awaitingPassword) {
+        inputText.textContent = '';
+    }
+    else {
+        renderInput();
+    }
 });
 
 function renderInput() {
@@ -222,13 +335,13 @@ function scrollToBottom() {
 }
 
 function isValidCommand(word) {
-    const validCommands = ['pwd', 'ls', 'cd', 'mkdir', 'touch', 'echo', 'cat', 'rm', 'cp', 'mv', 'clear', 'help', 'history'];
+    const validCommands = ['pwd', 'ls', 'cd', 'mkdir', 'touch', 'echo', 'cat', 'rm', 'cp', 'mv', 'clear', 'help', 'history', 'chmod', 'chown', 'sudo'];
     return validCommands.includes(word.toLowerCase());
 }
 
 function getCompletions(partial, isCommand) {
     if (isCommand) {
-        const commands = ['pwd', 'ls', 'cd', 'mkdir', 'touch', 'echo', 'cat', 'rm', 'cp', 'mv', 'clear', 'help', 'history'];
+        const commands = ['pwd', 'ls', 'cd', 'mkdir', 'touch', 'echo', 'cat', 'rm', 'cp', 'mv', 'clear', 'help', 'history', 'chmod', 'chown', 'sudo'];
         return commands.filter(c => c.startsWith(partial.toLowerCase()));
     }
 

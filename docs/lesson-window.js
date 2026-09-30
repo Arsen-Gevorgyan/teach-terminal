@@ -2,6 +2,7 @@ let currentLesson = null;
 let currentPhase = 'lecture';
 let lessonComplete = false;
 let showingSuccess = false;
+let currentStep = 0;
 
 const lessonWindow = document.getElementById('lesson-window');
 const lessonTitle = document.getElementById('lesson-window-title');
@@ -45,15 +46,45 @@ function renderLecture() {
 
 function renderPractice() {
     lessonBody.innerHTML = '';
-    const p = document.createElement('p');
-    p.textContent = currentLesson.practice.task;
-    lessonBody.appendChild(p);
 
-    const hint = document.createElement('p');
-    hint.style.color = '#aaaaaa';
-    hint.style.fontSize = '0.8rem';
-    hint.textContent = 'Type the command in the terminal below.';
-    lessonBody.appendChild(hint);
+    const intro = document.createElement('p');
+    intro.textContent = currentLesson.practice.intro;
+    lessonBody.appendChild(intro);
+
+    const spacer = document.createElement('p');
+    spacer.innerHTML = '&nbsp;';
+    lessonBody.appendChild(spacer);
+
+    const steps = currentLesson.practice.steps;
+
+    for (let i = 0; i < steps.length; ++i) {
+        const p = document.createElement('p');
+
+        if (i < currentStep) {
+            p.textContent = '[x] ' + steps[i].task;
+            p.style.color = 'var(--accent-color)';
+        }
+        else if (i === currentStep) {
+            p.textContent = '[>] ' + steps[i].task;
+            p.style.fontWeight = 'bold';
+        }
+        else {
+            p.textContent = '[ ] ' + steps[i].task;
+            p.style.color = '#888888';
+        }
+
+        lessonBody.appendChild(p);
+    }
+
+    // const p = document.createElement('p');
+    // p.textContent = currentLesson.practice.task;
+    // lessonBody.appendChild(p);
+
+    // const hint = document.createElement('p');
+    // hint.style.color = '#aaaaaa';
+    // hint.style.fontSize = '0.8rem';
+    // hint.textContent = 'Type the command in the terminal below.';
+    // lessonBody.appendChild(hint);
 }
 
 function renderPracticeSuccess() {
@@ -119,6 +150,9 @@ function openLesson(id) {
 
     currentPhase = 'lecture';
     showingSuccess = false;
+    currentStep = 0;
+
+    fs.cd('~');
 
     lessonWindow.classList.remove('hidden');
     updateWindow();
@@ -140,6 +174,7 @@ function handleNext() {
     }
 
     if (currentPhase === 'lecture' && currentLesson.type !== 'lecture') {
+        currentStep = 0;
         currentPhase = 'practice';
         updateWindow();
         return;
@@ -168,23 +203,51 @@ function handleBack() {
 function checkPractice(command) {
     if (!currentLesson) return;
     if (currentPhase !== 'practice') return;
-    if (!currentLesson.practice) return;
     if (showingSuccess) return;
+    if (!currentLesson.practice) return;
 
-    if (command === currentLesson.practice.expected) {
-        if (!lessonComplete) {
-            markLessonComplete(currentLesson.id);
-            lessonComplete = true;
+    const steps = currentLesson.practice.steps;
+    if (currentStep >= steps.length) return;
+
+    const step = steps[currentStep];
+
+    if (command === step.expected) {
+        ++currentStep;
+
+        if (currentStep >= steps.length) {
+            if (!lessonComplete) {
+                markLessonComplete(currentLesson.id);
+                lessonComplete = true;
+            }
+
+            renderPracticeSuccess();
+            showingSuccess = true;
+
+            lessonWindow.classList.remove('practice-mode');
+            lessonBackBtn.classList.add('hidden');
+            lessonNextBtn.textContent = 'Next Lesson';
+            lessonNextBtn.classList.remove('hidden');
         }
+        else {
+            renderPractice();
 
-        renderPracticeSuccess();
-        showingSuccess = true;
-
-        lessonWindow.classList.remove('practice-mode');
-        lessonBackBtn.classList.add('hidden');
-        lessonNextBtn.textContent = 'Next Lesson';
-        lessonNextBtn.classList.remove('hidden');
+        }
     }
+
+    // if (command === currentLesson.practice.expected) {
+    //     if (!lessonComplete) {
+    //         markLessonComplete(currentLesson.id);
+    //         lessonComplete = true;
+    //     }
+
+    //     renderPracticeSuccess();
+    //     showingSuccess = true;
+
+    //     lessonWindow.classList.remove('practice-mode');
+    //     lessonBackBtn.classList.add('hidden');
+    //     lessonNextBtn.textContent = 'Next Lesson';
+    //     lessonNextBtn.classList.remove('hidden');
+    // }
 }
 
 
