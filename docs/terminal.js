@@ -42,6 +42,10 @@ hiddenInput.addEventListener('keydown', (event) => {
                     outputArea.insertBefore(outputLine, inputLine);
                 }
 
+                if (typeof checkPractice === 'function'){
+                    checkPractice(command);
+                }
+
                 updatePrompt();
                 window.sudoActive = false;
             }

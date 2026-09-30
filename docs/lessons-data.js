@@ -545,7 +545,7 @@ const SECTIONS = [
                     intro: "Practice time. Let's use sudo to change ownership to root.",
                     steps: [
                         { task: "Create a file called 'system.txt'.", expected: "touch system.txt" },
-                        { task: "Use sudo to change its owner to 'root'.", expected: "sudo chown root system.txt" },
+                        { task: "Use sudo to change its owner to 'root'.", expected: "chown root system.txt" },
                         { task: "Verify with ls -l.", expected: "ls -l" }
                     ],
                     success: "Correct. You used administrator powers."
@@ -554,22 +554,24 @@ const SECTIONS = [
         ]
     },
     {
-        id: "mission",
-        title: "Final Mission",
+        id: "final",
+        title: "Course Complete",
         lessons: [
             {
                 id: 25,
-                title: "System Breach Response",
-                subtitle: "Stop the virus",
-                type: "mission",
+                title: "Congratulations",
+                subtitle: "You finished Teach Terminal",
+                type: "lecture",
                 lecture: [
-                    "BREACH DETECTED",
+                    "Congratulations!",
                     "",
-                    "A virus is spreading through your filesystem.",
+                    "You finished Teach Terminal.",
                     "",
-                    "Find the infected files. Remove them.",
+                    "You now know the basics of the Linux terminal:",
                     "",
-                    "Secure the system before it is too late."
+                    "Navigation, files, redirection, and permissions.",
+                    "",
+                    "Keep practicing. The terminal gets easier the more you use it."
                 ]
             }
         ]

@@ -44,6 +44,26 @@ function renderLecture() {
     });
 }
 
+function chechPractice(command) {
+    console.log('CHECK:', command, '| phase:', currentPhase, '| step:', currentStep);
+
+    if (!currentLesson) return;
+    if (currentPhase !== 'practice') return;
+    if (showingSuccess) return;
+    if (!currentLesson.practice) return;
+
+    const steps = currentLesson.practice.steps;
+    if (currentStep => steps.lengt) return;
+
+    const step = steps[currentStep];
+    console.log('EXPECTED:', step.expected);
+
+    if (command === step.expected) {
+        console.log('MATCH!');
+    }
+
+}
+
 function renderPractice() {
     lessonBody.innerHTML = '';
 
@@ -152,7 +172,14 @@ function openLesson(id) {
     showingSuccess = false;
     currentStep = 0;
 
-    fs.cd('~');
+    fs.reset();
+
+    const outputArea = document.getElementById('output-area');
+    const inputLine = document.getElementById('input-line');
+    outputArea.querySelectorAll('div').forEach(div => {
+        if (div !== inputLine) div.remove();
+    });
+    
 
     lessonWindow.classList.remove('hidden');
     updateWindow();

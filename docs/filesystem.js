@@ -596,6 +596,17 @@ class FileSystem {
         return { success: true };
     }
 
+    reset() {
+        const home = this.#findHome();
+        const keep = ['Documents', 'Downloads', 'Desktop'];
+        for (const child of home.getChildren()) {
+            if (!keep.includes(child.fileName)) {
+                home.removeChild(child.fileName);
+            }
+        }
+        this.#cwd = home;
+    }
+
     chmod(path, mode) {
         const target = this.#resolvePath(path);
         if (!target) {
